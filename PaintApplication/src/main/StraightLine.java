@@ -5,22 +5,22 @@ import Exceptions.IncorrectInputException;
 import java.awt.*;
 
 
-public class Line {
+public class StraightLine {
     private double x1;
     private double x2;
     private double y1;
     private double y2;
 
-    public Line(double x1, double y1, double x2, double y2) throws IncorrectInputException {
+    public StraightLine(double x1, double y1, double x2, double y2) throws IncorrectInputException {
         setValues(x1, y1, x2, y2);
 
     }
 
-    public Line(Line line) throws IncorrectInputException {
-        setValues(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+    public StraightLine(StraightLine straightLine) throws IncorrectInputException {
+        setValues(straightLine.getX1(), straightLine.getY1(), straightLine.getX2(), straightLine.getY2());
     }
 
-    public Line(Point a, Point b) throws IncorrectInputException {
+    public StraightLine(Point a, Point b) throws IncorrectInputException {
         setValues(a.x, a.y, b.x, b.y);
     }
 
@@ -33,8 +33,8 @@ public class Line {
         this.y2 = y2;
     }
 
-    private void setValues(Line line) throws IncorrectInputException {
-        setValues(line.x1, line.y1, line.x2, line.y2);
+    private void setValues(StraightLine straightLine) throws IncorrectInputException {
+        setValues(straightLine.x1, straightLine.y1, straightLine.x2, straightLine.y2);
     }
 
 
@@ -74,10 +74,10 @@ public class Line {
     @Override
     public boolean equals(Object obj) {
         if(obj == null) return false;
-        if(!(obj instanceof Line)) return false;
+        if(!(obj instanceof StraightLine)) return false;
         else{
-            if(this.x1 == ((Line) obj).x1 && this.y1 == ((Line) obj).y1 &&
-                    this.x2 == ((Line) obj).x2 && this.y2 == ((Line) obj).y2){
+            if(this.x1 == ((StraightLine) obj).x1 && this.y1 == ((StraightLine) obj).y1 &&
+                    this.x2 == ((StraightLine) obj).x2 && this.y2 == ((StraightLine) obj).y2){
                 return true;
             }
         }

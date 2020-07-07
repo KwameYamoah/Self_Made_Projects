@@ -21,6 +21,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
@@ -58,13 +59,12 @@ public class Main extends Application {
     private Label vector_magnitude;
     private Label mouse_pointer;
     private Label graph_size;
-    private ArrayList<Line> currentGraphLines = new ArrayList<>();
     private static final int TEXT_FIELD_SIZE = 50;
     private Stage primaryStage;
     private static final int MENU_TOOLBAR_HEIGHT = 58;
     private ToggleGroup toggleGroup1;
     private ToggleGroup toggleGroup2;
-
+    private ArrayList<StraightLine> currentGraphStraightLines = new ArrayList<>();
 
 
     @Override
@@ -256,9 +256,9 @@ public class Main extends Application {
 
     private void addPoint(double x, double y){
         try {
-            Line line = new Line(x, y, x + 1, y + 1);
-            currentGraphLines.add(line);
-            drawOnGraph(line);
+            StraightLine straightLine = new StraightLine(x, y, x + 1, y + 1);
+            currentGraphStraightLines.add(straightLine);
+            drawOnGraph(straightLine);
         } catch (IncorrectInputException e) {
             System.out.println("Error adding vector - negative numbers");
         }
@@ -360,16 +360,16 @@ public class Main extends Application {
 
     private void addLineToGraph(double x1, double y1, double x2, double y2) {
         try {
-            Line line = new Line(x1, y1, x2, y2);
-            currentGraphLines.add(line);
-            drawOnGraph(line);
+            StraightLine straightLine = new StraightLine(x1, y1, x2, y2);
+            currentGraphStraightLines.add(straightLine);
+            drawOnGraph(straightLine);
         } catch (IncorrectInputException e) {
             System.out.println("Error adding vector - negative numbers");
         }
     }
 
-    private void drawOnGraph(Line vector) {
-        javafx.scene.shape.Line line = new javafx.scene.shape.Line(vector.getX1(), GRAPH_HEIGHT - vector.getY1() + CENTERING_LINE_ON_BORDER
+    private void drawOnGraph(StraightLine vector) {
+        Line line = new Line(vector.getX1(), GRAPH_HEIGHT - vector.getY1() + CENTERING_LINE_ON_BORDER
                 , vector.getX2(), GRAPH_HEIGHT - vector.getY2() + CENTERING_LINE_ON_BORDER);
         Color color = Color.GREEN;
         switch (((ToggleButton) (toggleGroup2.getSelectedToggle())).getText()) {
@@ -440,9 +440,9 @@ public class Main extends Application {
                 clearGraph();
                 while (scanner.hasNext()) {
                     String[] savedVector = scanner.next().split(",");
-                    Line line = new Line(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
+                    StraightLine straightLine = new StraightLine(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
                             Double.parseDouble(savedVector[2]), Double.parseDouble(savedVector[3]));
-                    addVectorToGraph(line.getX1(), line.getY1(), line.getX2(), line.getY2(), true);
+                    addVectorToGraph(straightLine.getX1(), straightLine.getY1(), straightLine.getX2(), straightLine.getY2(), true);
                 }
                 System.out.println("Successfully opened file");
             } catch (NumberFormatException e) {
@@ -467,9 +467,9 @@ public class Main extends Application {
             }
             System.out.println("Saving graph");
             try (FileWriter writer = new FileWriter(selectedFolder.getPath() + "/graph.dat")) {
-                for (Line line : currentGraphLines) {
-                    writer.write(line.getX1() + ", " + line.getY1()
-                            + ", " + line.getX2() + ", " + line.getY2() + "\n");
+                for (StraightLine straightLine : currentGraphStraightLines) {
+                    writer.write(straightLine.getX1() + ", " + straightLine.getY1()
+                            + ", " + straightLine.getX2() + ", " + straightLine.getY2() + "\n");
                 }
                 System.out.println("File successfully saved");
             } catch (IOException e) {
