@@ -5,7 +5,6 @@ package main;
 //TODO NEXT : Rectangle
 //TODO NEXT : Circle
 
-import Exceptions.IncorrectInputException;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -17,7 +16,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -51,21 +49,15 @@ public class Main extends Application {
     private static BorderPane UI = new BorderPane();
     private static Group graphPane;
     private static Group drawingsGroup = new Group();
-    private TextField vector_x1;
-    private TextField vector_y1;
-    private TextField vector_x2;
-    private TextField vector_y2;
-    private Label vector_angle;
-    private Label vector_magnitude;
     private Label mouse_pointer;
     private Label graph_size;
-    private static final int TEXT_FIELD_SIZE = 50;
     private Stage primaryStage;
     private static final int MENU_TOOLBAR_HEIGHT = 58;
     private ToggleGroup toggleGroup1;
     private ToggleGroup toggleGroup2;
-    private ArrayList<StraightLine> currentGraphStraightLines = new ArrayList<>();
-
+    private ArrayList<Line> currentGraphStraightLines = new ArrayList<>();
+    private Line previousPoint;
+    private Boolean notSet = true;
 
     @Override
     public void start(Stage primaryStage) {
@@ -140,16 +132,16 @@ public class Main extends Application {
     private FlowPane createCommandToolbar() {
         FlowPane homeToolbar = new FlowPane();
         homeToolbar.setHgap(1);
-        homeToolbar.setPadding(new Insets(1,0,1,0));
+        homeToolbar.setPadding(new Insets(1, 0, 1, 0));
         homeToolbar.setPrefWidth(Toolkit.getDefaultToolkit().getScreenSize().getWidth());
-        homeToolbar.setBorder(new Border(new BorderStroke(Color.GREY, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0,0,1,0))));
+        homeToolbar.setBorder(new Border(new BorderStroke(Color.GREY, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 0, 1, 0))));
 
         RadioButton button = createPencilButton();
         RadioButton create = createLineButton();
         RadioButton rectangle = createRectangleButton();
 
         toggleGroup1 = new ToggleGroup();
-        toggleGroup1.getToggles().addAll(button,create,rectangle);
+        toggleGroup1.getToggles().addAll(button, create, rectangle);
         toggleGroup1.selectToggle(button);
 
         RadioButton colourBlack = createBlackButton();
@@ -160,13 +152,11 @@ public class Main extends Application {
         toggleGroup2.getToggles().addAll(colourBlack, colourRed, colourBlue);
         toggleGroup2.selectToggle(colourBlack);
 
-        for(Toggle control : toggleGroup1.getToggles())
-        {
+        for (Toggle control : toggleGroup1.getToggles()) {
             homeToolbar.getChildren().add((RadioButton) control);
         }
 
-        for(Toggle control : toggleGroup2.getToggles())
-        {
+        for (Toggle control : toggleGroup2.getToggles()) {
             homeToolbar.getChildren().add((RadioButton) control);
         }
         homeToolbar.setStyle("-fx-faint-focus-color: transparent;");
@@ -228,47 +218,56 @@ public class Main extends Application {
         graphPane.setLayoutY(GAP_BEFORE_GRAPH_START);
         graphPane.setOnMouseMoved((mouseEvent) -> {
             mouse_pointer.setText((mouseEvent.getSceneX() - LEFT_H_GAP) + ", " + (mouseEvent.getSceneY() - MENU_TOOLBAR_HEIGHT));
-            System.out.println(mouseEvent.getSceneX() - LEFT_H_GAP);
         });
         createMouseEvents(graphPane);
     }
 
     private void createMouseEvents(Group graphPane) {
 
-        graphPane.setOnMouseClicked((mouseEvent) ->{
-            if(((ToggleButton)toggleGroup1.getSelectedToggle()).getText().equals("Pencil")){
+        graphPane.setOnMouseClicked((mouseEvent) -> {
+            if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
                 double x = mouseEvent.getX();
                 double y = GRAPH_HEIGHT - mouseEvent.getY();
+                previousPoint = new Line(x, y, x + 1, y + 1);
                 addPoint(x, y);
             }
         });
 
-        graphPane.setOnMouseDragged((mouseEvent) ->{
-            if(((ToggleButton)toggleGroup1.getSelectedToggle()).getText().equals("Pencil")){
+        graphPane.setOnMouseDragged((mouseEvent) -> {
+            if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
+
                 double x = mouseEvent.getX();
                 double y = GRAPH_HEIGHT - mouseEvent.getY();
-                if((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)){
-                    addPoint(x,y);
+                if(notSet){
+                    previousPoint = new Line(x, y, x + 1, y + 1);
+                    notSet = false;
                 }
+                if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
+                    addPoint(x, y);
+                    previousPoint = new Line(x, y, x + 1, y + 1);
+                }
+
             }
         });
+
+        graphPane.setOnMouseReleased((mouseEvent) -> notSet = true);
+
     }
 
-    private void addPoint(double x, double y){
-        try {
-            StraightLine straightLine = new StraightLine(x, y, x + 1, y + 1);
-            currentGraphStraightLines.add(straightLine);
-            drawOnGraph(straightLine);
-        } catch (IncorrectInputException e) {
-            System.out.println("Error adding vector - negative numbers");
+    private void addPoint(double x, double y) {
+        if ((Math.abs(previousPoint.getStartX() - x) + Math.abs(previousPoint.getStartY() - y)) > 2) {
+            drawOnGraph(new Line(previousPoint.getStartX(), previousPoint.getStartY(), x, y));
         }
+        Line straightLine = new Line(x, y, x + 1, y + 1);
+        currentGraphStraightLines.add(straightLine);
+        drawOnGraph(straightLine);
     }
+
     private void createGrid(boolean hasGridLines) {
         if (hasGridLines) {
             createGraphGrid(graphPane);
-        }
-        else{
-            Rectangle rectangle = new Rectangle(0,0,GRAPH_WIDTH,GRAPH_HEIGHT);
+        } else {
+            Rectangle rectangle = new Rectangle(0, 0, GRAPH_WIDTH, GRAPH_HEIGHT);
             rectangle.setFill(Color.WHITE);
             graphPane.getChildren().add(rectangle);
         }
@@ -292,40 +291,15 @@ public class Main extends Application {
     }
 
     private void setDefaultValues() {
-        initializeTextFields();
         initializeLabels();
-        initializeLabelsRange();
-        setTextFieldsRange();
         setLabelsRange();
         setDefaultLabelValues();
     }
 
-    private void initializeTextFields() {
-        vector_x1 = new TextField();
-        vector_y1 = new TextField();
-        vector_x2 = new TextField();
-        vector_y2 = new TextField();
-    }
 
     private void initializeLabels() {
-        vector_angle = new Label();
-        vector_magnitude = new Label();
         mouse_pointer = new Label();
         graph_size = new Label();
-    }
-
-    private void initializeLabelsRange() {
-        vector_angle.setMinSize(40, 15);
-        vector_angle.setMaxSize(40, 15);
-        vector_magnitude.setMinSize(40, 15);
-        vector_magnitude.setMaxSize(80, 15);
-    }
-
-    private void setTextFieldsRange() {
-        vector_x1.setMaxWidth(TEXT_FIELD_SIZE);
-        vector_y1.setMaxWidth(TEXT_FIELD_SIZE);
-        vector_x2.setMaxWidth(TEXT_FIELD_SIZE);
-        vector_y2.setMaxWidth(TEXT_FIELD_SIZE);
     }
 
     private void setLabelsRange() {
@@ -343,34 +317,20 @@ public class Main extends Application {
         UI.setBottom(createInformationBar());
     }
 
-    private void addVectorToGraph(double x1, double y1, double x2, double y2, boolean fromFile) {
-        if (!fromFile) {
-            try {
-                x1 = Double.parseDouble(vector_x1.getText());
-                y1 = Double.parseDouble(vector_y1.getText());
-                x2 = Double.parseDouble(vector_x2.getText());
-                y2 = Double.parseDouble(vector_y2.getText());
-            } catch (NumberFormatException e) {
-                System.out.println("Incorrect Input, Please enter numbers");
-                return;
-            }
-        }
+    private void addDrawingToGraph(double x1, double y1, double x2, double y2) {
         addLineToGraph(x1, y1, x2, y2);
     }
 
     private void addLineToGraph(double x1, double y1, double x2, double y2) {
-        try {
-            StraightLine straightLine = new StraightLine(x1, y1, x2, y2);
-            currentGraphStraightLines.add(straightLine);
-            drawOnGraph(straightLine);
-        } catch (IncorrectInputException e) {
-            System.out.println("Error adding vector - negative numbers");
-        }
+        Line line = new Line(x1, y1, x2, y2);
+        currentGraphStraightLines.add(line);
+        drawOnGraph(line);
+
     }
 
-    private void drawOnGraph(StraightLine vector) {
-        Line line = new Line(vector.getX1(), GRAPH_HEIGHT - vector.getY1() + CENTERING_LINE_ON_BORDER
-                , vector.getX2(), GRAPH_HEIGHT - vector.getY2() + CENTERING_LINE_ON_BORDER);
+    private void drawOnGraph(Line line) {
+        line.setStartY(GRAPH_HEIGHT - line.getStartY() + CENTERING_LINE_ON_BORDER);
+        line.setEndY(GRAPH_HEIGHT - line.getEndY() + CENTERING_LINE_ON_BORDER);
         Color color = Color.GREEN;
         switch (((ToggleButton) (toggleGroup2.getSelectedToggle())).getText()) {
             case "Black":
@@ -388,7 +348,6 @@ public class Main extends Application {
         drawingsGroup.getChildren().add(line);
     }
 
-
     private void clearGraph() {
         drawingsGroup.getChildren().clear();
     }
@@ -401,7 +360,7 @@ public class Main extends Application {
     }
 
     private void setDefaultValues(GridPane informationBar) {
-        informationBar.setPadding(new Insets(0,0,0,2));
+        informationBar.setPadding(new Insets(0, 0, 0, 2));
         informationBar.setHgap(50);
     }
 
@@ -440,17 +399,15 @@ public class Main extends Application {
                 clearGraph();
                 while (scanner.hasNext()) {
                     String[] savedVector = scanner.next().split(",");
-                    StraightLine straightLine = new StraightLine(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
+                    Line straightLine = new Line(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
                             Double.parseDouble(savedVector[2]), Double.parseDouble(savedVector[3]));
-                    addVectorToGraph(straightLine.getX1(), straightLine.getY1(), straightLine.getX2(), straightLine.getY2(), true);
+                    addDrawingToGraph(straightLine.getStartX(), straightLine.getStartY(), straightLine.getEndX(), straightLine.getEndY());
                 }
                 System.out.println("Successfully opened file");
             } catch (NumberFormatException e) {
                 System.out.println("Saved file contains non-numbers");
             } catch (IOException e) {
                 System.out.println("Error while opening file");
-            } catch (IncorrectInputException e) {
-                System.out.println("Incorrect input in saved file");
             }
         }
     }
@@ -467,9 +424,9 @@ public class Main extends Application {
             }
             System.out.println("Saving graph");
             try (FileWriter writer = new FileWriter(selectedFolder.getPath() + "/graph.dat")) {
-                for (StraightLine straightLine : currentGraphStraightLines) {
-                    writer.write(straightLine.getX1() + ", " + straightLine.getY1()
-                            + ", " + straightLine.getX2() + ", " + straightLine.getY2() + "\n");
+                for (Line straightLine : currentGraphStraightLines) {
+                    writer.write(straightLine.getStartX() + ", " + straightLine.getStartY()
+                            + ", " + straightLine.getEndX() + ", " + straightLine.getEndY() + "\n");
                 }
                 System.out.println("File successfully saved");
             } catch (IOException e) {

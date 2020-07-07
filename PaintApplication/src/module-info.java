@@ -4,5 +4,4 @@ module PaintApplication {
     requires java.desktop;
     requires junit;
     opens main;
-    opens Exceptions;
 }
