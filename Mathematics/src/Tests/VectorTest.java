@@ -1,11 +1,11 @@
 package Tests;
 
-import Mathematics.Exceptions.IncorrectInputException;
+import Exceptions.IncorrectInputException;
+import Vector;
 import org.junit.Before;
 import org.junit.Test;
-import sample.Vector;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class VectorTest {
     private Vector vector1;
