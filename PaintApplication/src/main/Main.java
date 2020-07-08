@@ -25,7 +25,6 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.awt.*;
 import java.io.File;
 import java.io.FileReader;
@@ -78,7 +77,7 @@ public class Main extends Application {
         FlowPane homeToolbar = createCommandToolbar();
         createMenus(menuToolbar, homeToolbar);
         createGraphPane();
-        createGrid(false);
+        createBoard(false);
         setDefaultValues();
         createBottomToolbar();
     }
@@ -130,28 +129,43 @@ public class Main extends Application {
 
 
     private FlowPane createCommandToolbar() {
+        FlowPane homeToolbar = createHomeToolbar();
+        RadioButton button = createPencilButton();
+        RadioButton create = createLineButton();
+        RadioButton rectangle = createRectangleButton();
+        addShapeButtonsToToggleGroup(button, create, rectangle);
+        RadioButton colourBlack = createBlackButton();
+        RadioButton colourRed = createRedButton();
+        RadioButton colourBlue = createBlueButton();
+        addColourButtonsToToggleGroup(colourBlack, colourRed, colourBlue);
+        addButtonsToPane(homeToolbar);
+        return homeToolbar;
+    }
+
+
+
+    private FlowPane createHomeToolbar() {
         FlowPane homeToolbar = new FlowPane();
         homeToolbar.setHgap(1);
         homeToolbar.setPadding(new Insets(1, 0, 1, 0));
         homeToolbar.setPrefWidth(Toolkit.getDefaultToolkit().getScreenSize().getWidth());
         homeToolbar.setBorder(new Border(new BorderStroke(Color.GREY, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 0, 1, 0))));
+        homeToolbar.setStyle("-fx-faint-focus-color: transparent;");
+        return homeToolbar;
+    }
 
-        RadioButton button = createPencilButton();
-        RadioButton create = createLineButton();
-        RadioButton rectangle = createRectangleButton();
-
+    private void addShapeButtonsToToggleGroup(RadioButton button, RadioButton create, RadioButton rectangle) {
         toggleGroup1 = new ToggleGroup();
         toggleGroup1.getToggles().addAll(button, create, rectangle);
         toggleGroup1.selectToggle(button);
-
-        RadioButton colourBlack = createBlackButton();
-        RadioButton colourRed = createRedButton();
-        RadioButton colourBlue = createBlueButton();
-
+    }
+    private void addColourButtonsToToggleGroup(RadioButton colourBlack, RadioButton colourRed, RadioButton colourBlue) {
         toggleGroup2 = new ToggleGroup();
         toggleGroup2.getToggles().addAll(colourBlack, colourRed, colourBlue);
         toggleGroup2.selectToggle(colourBlack);
+    }
 
+    private void addButtonsToPane(FlowPane homeToolbar) {
         for (Toggle control : toggleGroup1.getToggles()) {
             homeToolbar.getChildren().add((RadioButton) control);
         }
@@ -159,8 +173,6 @@ public class Main extends Application {
         for (Toggle control : toggleGroup2.getToggles()) {
             homeToolbar.getChildren().add((RadioButton) control);
         }
-        homeToolbar.setStyle("-fx-faint-focus-color: transparent;");
-        return homeToolbar;
     }
 
     private RadioButton createPencilButton() {
@@ -216,14 +228,12 @@ public class Main extends Application {
         graphPane = new Group();
         graphPane.setLayoutX(LEFT_H_GAP);
         graphPane.setLayoutY(GAP_BEFORE_GRAPH_START);
-        graphPane.setOnMouseMoved((mouseEvent) -> {
-            mouse_pointer.setText((mouseEvent.getSceneX() - LEFT_H_GAP) + ", " + (mouseEvent.getSceneY() - MENU_TOOLBAR_HEIGHT));
-        });
-        createMouseEvents(graphPane);
+        graphPane.setOnMouseMoved((mouseEvent) -> mouse_pointer.setText((mouseEvent.getSceneX() - LEFT_H_GAP) + ", " + (mouseEvent.getSceneY() - MENU_TOOLBAR_HEIGHT)));
+        createMouseClickEvent(graphPane);
+        createMouseDragEvent(graphPane);
     }
 
-    private void createMouseEvents(Group graphPane) {
-
+    private void createMouseClickEvent(Group graphPane) {
         graphPane.setOnMouseClicked((mouseEvent) -> {
             if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
                 double x = mouseEvent.getX();
@@ -232,10 +242,13 @@ public class Main extends Application {
                 addPoint(x, y);
             }
         });
+        graphPane.setOnMouseReleased((mouseEvent) -> notSet = true);
 
+    }
+
+    private void createMouseDragEvent(Group graphPane) {
         graphPane.setOnMouseDragged((mouseEvent) -> {
             if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
-
                 double x = mouseEvent.getX();
                 double y = GRAPH_HEIGHT - mouseEvent.getY();
                 if(notSet){
@@ -246,21 +259,33 @@ public class Main extends Application {
                     addPoint(x, y);
                     previousPoint = new Line(x, y, x + 1, y + 1);
                 }
-
             }
         });
-
-        graphPane.setOnMouseReleased((mouseEvent) -> notSet = true);
-
     }
 
     private void addPoint(double x, double y) {
         if ((Math.abs(previousPoint.getStartX() - x) + Math.abs(previousPoint.getStartY() - y)) > 2) {
-            drawOnGraph(new Line(previousPoint.getStartX(), previousPoint.getStartY(), x, y));
+            drawOnGraph(new Line(previousPoint.getEndX() + 1, previousPoint.getEndY(), x - 1 , y));
         }
         Line straightLine = new Line(x, y, x + 1, y + 1);
         currentGraphStraightLines.add(straightLine);
         drawOnGraph(straightLine);
+    }
+
+    private void createBoard(boolean hasGridLines) {
+        createGrid(hasGridLines);
+        createBoardPanes();
+    }
+
+    private void createBoardPanes() {
+        graphPane.getChildren().add(drawingsGroup);
+        StackPane graphContainer = new StackPane();
+        graphContainer.setPrefWidth(SCREEN_MAX_WIDTH);
+        Pane pane = new Pane();
+        pane.setStyle("-fx-background-color: rgb(197, 207, 223);");
+        pane.getChildren().add(graphPane);
+        graphContainer.getChildren().add(pane);
+        UI.setCenter(graphContainer);
     }
 
     private void createGrid(boolean hasGridLines) {
@@ -271,14 +296,6 @@ public class Main extends Application {
             rectangle.setFill(Color.WHITE);
             graphPane.getChildren().add(rectangle);
         }
-        graphPane.getChildren().add(drawingsGroup);
-        StackPane graphContainer = new StackPane();
-        graphContainer.setPrefWidth(SCREEN_MAX_WIDTH);
-        Pane pane = new Pane();
-        pane.setStyle("-fx-background-color: rgb(197, 207, 223);");
-        pane.getChildren().add(graphPane);
-        graphContainer.getChildren().add(pane);
-        UI.setCenter(graphContainer);
     }
 
     private void createGraphGrid(Group graphPane) {
@@ -331,21 +348,22 @@ public class Main extends Application {
     private void drawOnGraph(Line line) {
         line.setStartY(GRAPH_HEIGHT - line.getStartY() + CENTERING_LINE_ON_BORDER);
         line.setEndY(GRAPH_HEIGHT - line.getEndY() + CENTERING_LINE_ON_BORDER);
-        Color color = Color.GREEN;
+        line.setStrokeWidth(1);
+        Color color = getColor();
+        line.setStroke(color);
+        drawingsGroup.getChildren().add(line);
+    }
+
+    public Color  getColor(){
         switch (((ToggleButton) (toggleGroup2.getSelectedToggle())).getText()) {
             case "Black":
-                color = Color.BLACK;
-                break;
+                return Color.BLACK;
             case "Red":
-                color = Color.RED;
-                break;
+                return  Color.RED;
             case "Blue":
-                color = Color.BLUE;
-                break;
+                return Color.BLUE;
         }
-        line.setStroke(color);
-        line.setStrokeWidth(1);
-        drawingsGroup.getChildren().add(line);
+        return Color.BLACK;
     }
 
     private void clearGraph() {
@@ -385,23 +403,27 @@ public class Main extends Application {
     class OpenGraph implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
-            File workingDirectory = new File(System.getProperty("user.dir"));
-            FileChooser fileChooser = new FileChooser();
-            System.out.println(workingDirectory);
-            fileChooser.setInitialDirectory(workingDirectory);
-            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+            File selectedFile = getFilePath();
             if (selectedFile == null) {
                 return;
             }
             System.out.println("Opening saved graph");
+            load(selectedFile);
+        }
+
+        private File getFilePath() {
+            File workingDirectory = new File(System.getProperty("user.dir"));
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(workingDirectory);
+            return fileChooser.showOpenDialog(primaryStage);
+        }
+
+        private void load(File selectedFile) {
             try (Scanner scanner = new Scanner(new FileReader(selectedFile.getPath()))) {
                 scanner.useDelimiter("\n");
                 clearGraph();
                 while (scanner.hasNext()) {
-                    String[] savedVector = scanner.next().split(",");
-                    Line straightLine = new Line(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
-                            Double.parseDouble(savedVector[2]), Double.parseDouble(savedVector[3]));
-                    addDrawingToGraph(straightLine.getStartX(), straightLine.getStartY(), straightLine.getEndX(), straightLine.getEndY());
+                    parseDetails(scanner);
                 }
                 System.out.println("Successfully opened file");
             } catch (NumberFormatException e) {
@@ -410,19 +432,34 @@ public class Main extends Application {
                 System.out.println("Error while opening file");
             }
         }
+
+        private void parseDetails(Scanner scanner) {
+            String[] savedVector = scanner.next().split(",");
+            Line straightLine = new Line(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
+                    Double.parseDouble(savedVector[2]), Double.parseDouble(savedVector[3]));
+            addDrawingToGraph(straightLine.getStartX(), straightLine.getStartY(), straightLine.getEndX(), straightLine.getEndY());
+        }
     }
 
     class SaveGraph implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
-            File workingDirectory = new File(System.getProperty("user.dir"));
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setInitialDirectory(workingDirectory);
-            File selectedFolder = directoryChooser.showDialog(primaryStage);
+            File selectedFolder = getSaveDirectory();
             if (selectedFolder == null) {
                 return;
             }
             System.out.println("Saving graph");
+            save(selectedFolder);
+        }
+
+        private File getSaveDirectory() {
+            File workingDirectory = new File(System.getProperty("user.dir"));
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(workingDirectory);
+            return directoryChooser.showDialog(primaryStage);
+        }
+
+        private void save(File selectedFolder) {
             try (FileWriter writer = new FileWriter(selectedFolder.getPath() + "/graph.dat")) {
                 for (Line straightLine : currentGraphStraightLines) {
                     writer.write(straightLine.getStartX() + ", " + straightLine.getStartY()
