@@ -1,9 +1,7 @@
 package main;
+
 //TODO NEXT RIGHT CLICK ISSUE WHEN USING LINES -STARTS NEW LINE IF LEFT CLICK IS DRAGGED
-//TODO NEXT : Colour Picker - partially done
-//TODO NEXT : Pencil
-//TODO NEXT : Rectangle
-//TODO NEXT : Circle
+//TODO NEXT : Circle - Later when revisiting project - needs major refactoring
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -56,7 +54,7 @@ public class Main extends Application {
     private static final int MENU_TOOLBAR_HEIGHT = 58;
     private ToggleGroup toggleGroup1;
     private ToggleGroup toggleGroup2;
-    private ArrayList<Line> currentGraphStraightLines = new ArrayList<>();
+    private ArrayList<CustomLine> currentGraphStraightLines = new ArrayList<>();
     private Line previousPoint;
     private Boolean noPreviousPoint = true;
     private Point startOfDrawing = new Point();
@@ -299,7 +297,7 @@ public class Main extends Application {
                     }
                     Line line = new Line(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y);
                     line.setStrokeWidth(1);
-                    drawOnGraph(line, true);
+                    drawOnGraph(line, true, false);
 
                 }else if(((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Rectangle")){
                     if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
@@ -338,7 +336,7 @@ public class Main extends Application {
                         if (startOfDrawing.x >= 0) {
                             Line line = new Line(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y);
                             line.setStrokeWidth(1);
-                            drawOnGraph(line, false);
+                            drawOnGraph(line, false, false);
                             startOfDrawing.setLocation(-1, -1);
                             endOfDrawing.setLocation(-1, -1);
                         }
@@ -364,10 +362,10 @@ public class Main extends Application {
         line2.setStrokeWidth(1);
         line3.setStrokeWidth(1);
         line4.setStrokeWidth(1);
-        drawOnGraph(line1, hover);
-        drawOnGraph(line2, hover);
-        drawOnGraph(line3, hover);
-        drawOnGraph(line4, hover);
+        drawOnGraph(line1, hover, false);
+        drawOnGraph(line2, hover, false);
+        drawOnGraph(line3, hover, false);
+        drawOnGraph(line4, hover, false);
     }
 
 
@@ -375,10 +373,10 @@ public class Main extends Application {
         if ((Math.abs(previousPoint.getStartX() - x) + Math.abs(previousPoint.getStartY() - y)) > 2) {
             Line line = new Line(previousPoint.getEndX() + 1, previousPoint.getEndY(), x - 1, y);
             line.setStrokeWidth(1);
-            drawOnGraph(line, false);
+            drawOnGraph(line, false, false);
         }
         Line straightLine = new Line(x, y, x + 1, y + 1);
-        drawOnGraph(straightLine, false);
+        drawOnGraph(straightLine, false, false);
     }
 
     private void createBoard(boolean hasGridLines) {
@@ -444,24 +442,32 @@ public class Main extends Application {
         UI.setBottom(createInformationBar());
     }
 
-    private void addDrawingToGraph(double x1, double y1, double x2, double y2) {
-        addLineToGraph(x1, y1, x2, y2);
+    private void addDrawingToGraph(double x1, double y1, double x2, double y2,Color color, boolean fromFile) {
+        addLineToGraph(x1, y1, x2, y2, color, fromFile);
     }
 
-    private void addLineToGraph(double x1, double y1, double x2, double y2) {
+    private void addLineToGraph(double x1, double y1, double x2, double y2, Color color, boolean fromFile) {
         Line line = new Line(x1, GRAPH_HEIGHT - y1 + CENTERING_LINE_ON_BORDER, x2, GRAPH_HEIGHT - y2 + CENTERING_LINE_ON_BORDER);
-        drawOnGraph(line, false);
+        line.setStroke(color);
+        drawOnGraph(line, false, fromFile);
 
     }
 
-    private void drawOnGraph(Line line, boolean hover) {
+    private void drawOnGraph(Line line, boolean hover, boolean fromFile) {
         line.setStartY(GRAPH_HEIGHT - line.getStartY() + CENTERING_LINE_ON_BORDER);
         line.setEndY(GRAPH_HEIGHT - line.getEndY() + CENTERING_LINE_ON_BORDER);
         line.setStrokeWidth(1);
-        Color color = getColor();
-        line.setStroke(color);
+        Color color;
+        if(fromFile){
+            color = (Color)line.getStroke();
+        }
+        else{
+            color = getColor();
+            line.setStroke(color);
+        }
+
         if(!hover) {
-            currentGraphStraightLines.add(line);
+            currentGraphStraightLines.add(new CustomLine(line, color));
             drawingsGroup.getChildren().add(line);
         }
         else{
@@ -485,6 +491,7 @@ public class Main extends Application {
 
     private void clearGraph() {
         drawingsGroup.getChildren().clear();
+        currentGraphStraightLines.clear();
     }
 
     private GridPane createInformationBar() {
@@ -551,10 +558,12 @@ public class Main extends Application {
         }
 
         private void parseDetails(Scanner scanner) {
-            String[] savedVector = scanner.next().split(",");
-            Line straightLine = new Line(Double.parseDouble(savedVector[0]), Double.parseDouble(savedVector[1]),
-                    Double.parseDouble(savedVector[2]), Double.parseDouble(savedVector[3]));
-            addDrawingToGraph(straightLine.getStartX(), straightLine.getStartY(), straightLine.getEndX(), straightLine.getEndY());
+            String[] savedLine = scanner.next().split(",");
+            Line straightLine = new Line(Double.parseDouble(savedLine[0]), Double.parseDouble(savedLine[1]),
+                    Double.parseDouble(savedLine[2]), Double.parseDouble(savedLine[3]));
+
+            Color color = Color.web(savedLine[4].trim());
+            addDrawingToGraph(straightLine.getStartX(), straightLine.getStartY(), straightLine.getEndX(), straightLine.getEndY(), color, true);
         }
     }
 
@@ -578,9 +587,10 @@ public class Main extends Application {
 
         private void save(File selectedFolder) {
             try (FileWriter writer = new FileWriter(selectedFolder.getPath() + "/graph.dat")) {
-                for (Line straightLine : currentGraphStraightLines) {
-                    writer.write(straightLine.getStartX() + ", " + straightLine.getStartY()
-                            + ", " + straightLine.getEndX() + ", " + straightLine.getEndY() + "\n");
+                for (CustomLine lineToSave : currentGraphStraightLines) {
+                    Line line = lineToSave.getLine();
+                    writer.write(line.getStartX() + ", " + line.getStartY()
+                            + ", " + line.getEndX() + ", " + line.getEndY() + ", " + lineToSave.getColor() + "\n");
                 }
                 System.out.println("File successfully saved");
             } catch (IOException e) {
