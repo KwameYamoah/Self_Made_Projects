@@ -1,6 +1,6 @@
 package main;
-//TODO Refactor whole project
-//TODO NEXT : Colour Picker
+//TODO NEXT RIGHT CLICK ISSUE WHEN USING LINES -STARTS NEW LINE IF LEFT CLICK IS DRAGGED
+//TODO NEXT : Colour Picker - partially done
 //TODO NEXT : Pencil
 //TODO NEXT : Rectangle
 //TODO NEXT : Circle
@@ -25,6 +25,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
 import java.awt.*;
 import java.io.File;
 import java.io.FileReader;
@@ -48,6 +49,7 @@ public class Main extends Application {
     private static BorderPane UI = new BorderPane();
     private static Group graphPane;
     private static Group drawingsGroup = new Group();
+    private static Group hoverGroup = new Group();
     private Label mouse_pointer;
     private Label graph_size;
     private Stage primaryStage;
@@ -56,7 +58,9 @@ public class Main extends Application {
     private ToggleGroup toggleGroup2;
     private ArrayList<Line> currentGraphStraightLines = new ArrayList<>();
     private Line previousPoint;
-    private Boolean notSet = true;
+    private Boolean noPreviousPoint = true;
+    private Point startOfDrawing = new Point();
+    private Point endOfDrawing = new Point();
 
     @Override
     public void start(Stage primaryStage) {
@@ -64,6 +68,7 @@ public class Main extends Application {
         createUI();
         Scene scene = new Scene(UI, ROOT_WIDTH, ROOT_HEIGHT);
         primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
         primaryStage.show();
         this.primaryStage = primaryStage;
     }
@@ -130,17 +135,22 @@ public class Main extends Application {
 
     private FlowPane createCommandToolbar() {
         FlowPane homeToolbar = createHomeToolbar();
-        RadioButton button = createPencilButton();
-        RadioButton create = createLineButton();
-        RadioButton rectangle = createRectangleButton();
-        addShapeButtonsToToggleGroup(button, create, rectangle);
+        RadioButton pencilButton = createPencilButton();
+        RadioButton lineButton = createLineButton();
+        RadioButton rectangleButton = createRectangleButton();
+
+
+        addShapeButtonsToToggleGroup(pencilButton, lineButton, rectangleButton);
+
         RadioButton colourBlack = createBlackButton();
         RadioButton colourRed = createRedButton();
         RadioButton colourBlue = createBlueButton();
-        addColourButtonsToToggleGroup(colourBlack, colourRed, colourBlue);
+        RadioButton colourGreen = createGreenButton();
+        addColourButtonsToToggleGroup(colourBlack, colourRed, colourBlue, colourGreen);
         addButtonsToPane(homeToolbar);
         return homeToolbar;
     }
+
 
 
 
@@ -154,14 +164,15 @@ public class Main extends Application {
         return homeToolbar;
     }
 
-    private void addShapeButtonsToToggleGroup(RadioButton button, RadioButton create, RadioButton rectangle) {
+    private void addShapeButtonsToToggleGroup(RadioButton pencil, RadioButton create, RadioButton rectangle) {
         toggleGroup1 = new ToggleGroup();
-        toggleGroup1.getToggles().addAll(button, create, rectangle);
-        toggleGroup1.selectToggle(button);
+        toggleGroup1.getToggles().addAll(pencil, create, rectangle);
+        toggleGroup1.selectToggle(pencil);
     }
-    private void addColourButtonsToToggleGroup(RadioButton colourBlack, RadioButton colourRed, RadioButton colourBlue) {
+
+    private void addColourButtonsToToggleGroup(RadioButton colourBlack, RadioButton colourRed, RadioButton colourBlue, RadioButton colourGreen) {
         toggleGroup2 = new ToggleGroup();
-        toggleGroup2.getToggles().addAll(colourBlack, colourRed, colourBlue);
+        toggleGroup2.getToggles().addAll(colourBlack, colourRed, colourBlue,colourGreen);
         toggleGroup2.selectToggle(colourBlack);
     }
 
@@ -176,38 +187,53 @@ public class Main extends Application {
     }
 
     private RadioButton createPencilButton() {
-        RadioButton button = new RadioButton("Pencil");
-        applyRadioButtonCss(button);
-        return button;
+        RadioButton pencilButton = new RadioButton("Pencil");
+        applyRadioButtonCss(pencilButton);
+        return pencilButton;
     }
 
     private RadioButton createLineButton() {
-        RadioButton button = new RadioButton("Line");
-        applyRadioButtonCss(button);
-        return button;
+        RadioButton lineButton = new RadioButton("Line");
+        applyRadioButtonCss(lineButton);
+        return lineButton;
     }
 
     private RadioButton createRectangleButton() {
-        RadioButton button = new RadioButton("Rectangle");
-        applyRadioButtonCss(button);
-        return button;
+        RadioButton rectangleButton = new RadioButton("Rectangle");
+        applyRadioButtonCss(rectangleButton);
+        return rectangleButton;
     }
+
 
     private RadioButton createBlackButton() {
         RadioButton button = new RadioButton("Black");
         applyRadioButtonCss(button);
+        button.setStyle("-fx-background-color: black");
+        button.setTextFill(Color.BLACK);
         return button;
     }
 
     private RadioButton createRedButton() {
         RadioButton button = new RadioButton("Red");
         applyRadioButtonCss(button);
+        button.setStyle("-fx-background-color: red");
+        button.setTextFill(Color.RED);
         return button;
     }
 
     private RadioButton createBlueButton() {
         RadioButton button = new RadioButton("Blue");
         applyRadioButtonCss(button);
+        button.setStyle("-fx-background-color: blue");
+        button.setTextFill(Color.BLUE);
+        return button;
+    }
+
+    private RadioButton createGreenButton() {
+        RadioButton button = new RadioButton("Green");
+        applyRadioButtonCss(button);
+        button.setStyle("-fx-background-color: green");
+        button.setTextFill(Color.GREEN);
         return button;
     }
 
@@ -231,45 +257,128 @@ public class Main extends Application {
         graphPane.setOnMouseMoved((mouseEvent) -> mouse_pointer.setText((mouseEvent.getSceneX() - LEFT_H_GAP) + ", " + (mouseEvent.getSceneY() - MENU_TOOLBAR_HEIGHT)));
         createMouseClickEvent(graphPane);
         createMouseDragEvent(graphPane);
+        createMousePressedAndReleasedEvent(graphPane);
     }
 
     private void createMouseClickEvent(Group graphPane) {
         graphPane.setOnMouseClicked((mouseEvent) -> {
-            if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
+            System.out.println("Mouse Clicked");
+            if (mouseEvent.isPrimaryButtonDown()) {
                 double x = mouseEvent.getX();
                 double y = GRAPH_HEIGHT - mouseEvent.getY();
-                previousPoint = new Line(x, y, x + 1, y + 1);
-                addPoint(x, y);
+                if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
+                    previousPoint = new Line(x, y, x + 1, y + 1);
+                    addPoint(x, y);
+                }
             }
         });
-        graphPane.setOnMouseReleased((mouseEvent) -> notSet = true);
+
 
     }
 
     private void createMouseDragEvent(Group graphPane) {
         graphPane.setOnMouseDragged((mouseEvent) -> {
-            if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
+            System.out.println("Mouse Drag");
+            hoverGroup.getChildren().clear();
+            if (mouseEvent.isPrimaryButtonDown()) {
                 double x = mouseEvent.getX();
                 double y = GRAPH_HEIGHT - mouseEvent.getY();
-                if(notSet){
-                    previousPoint = new Line(x, y, x + 1, y + 1);
-                    notSet = false;
-                }
-                if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
-                    addPoint(x, y);
-                    previousPoint = new Line(x, y, x + 1, y + 1);
+                if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Pencil")) {
+
+                    if (noPreviousPoint) {
+                        previousPoint = new Line(x, y, x + 1, y + 1);
+                        noPreviousPoint = false;
+                    }
+                    if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
+                        addPoint(x, y);
+                        previousPoint = new Line(x, y, x + 1, y + 1);
+                    }
+                } else if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Line")){
+                    if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
+                        endOfDrawing.setLocation(x, y);
+                    }
+                    Line line = new Line(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y);
+                    line.setStrokeWidth(1);
+                    drawOnGraph(line, true);
+
+                }else if(((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Rectangle")){
+                    if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
+                        endOfDrawing.setLocation(x, y);
+                    }
+                    drawRectangle(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y, true);
                 }
             }
         });
     }
 
+    private void createMousePressedAndReleasedEvent(Group graphPane) {
+        graphPane.setOnMousePressed((mouseEvent) -> {
+            System.out.println("Mouse Pressed");
+            if (mouseEvent.isPrimaryButtonDown()) {
+                double x = mouseEvent.getX();
+                double y = GRAPH_HEIGHT - mouseEvent.getY();
+                if (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Line") || (((ToggleButton) toggleGroup1.getSelectedToggle()).getText().equals("Rectangle"))) {
+                    if ((x >= 0) && (x <= GRAPH_WIDTH) && (y >= 0) & (y <= GRAPH_HEIGHT)) {
+                        startOfDrawing.setLocation(x, y);
+                    }
+
+                }
+            }
+
+        });
+
+        graphPane.setOnMouseReleased((mouseEvent) -> {
+            hoverGroup.getChildren().clear();
+            switch (((ToggleButton) toggleGroup1.getSelectedToggle()).getText()) {
+                case "Pencil":
+                    noPreviousPoint = true;
+                    break;
+                case "Line":
+                    if (!(mouseEvent.isPrimaryButtonDown() || mouseEvent.isSecondaryButtonDown())) {
+                        if (startOfDrawing.x >= 0) {
+                            Line line = new Line(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y);
+                            line.setStrokeWidth(1);
+                            drawOnGraph(line, false);
+                            startOfDrawing.setLocation(-1, -1);
+                            endOfDrawing.setLocation(-1, -1);
+                        }
+                    }
+                    break;
+                case "Rectangle":
+                    drawRectangle(startOfDrawing.x, startOfDrawing.y, endOfDrawing.x, endOfDrawing.y, false);
+                    break;
+            }
+
+
+        });
+    }
+
+
+
+    private void drawRectangle(double x1,double y1,double x2, double y2, boolean hover) {
+        Line line1 = new Line(x1,y1,x2,y1);
+        Line line2 = new Line(x2,y1,x2,y2);
+        Line line3 = new Line(x2,y2,x1,y2);
+        Line line4 = new Line(x1,y2,x1,y1);
+        line1.setStrokeWidth(1);
+        line2.setStrokeWidth(1);
+        line3.setStrokeWidth(1);
+        line4.setStrokeWidth(1);
+        drawOnGraph(line1, hover);
+        drawOnGraph(line2, hover);
+        drawOnGraph(line3, hover);
+        drawOnGraph(line4, hover);
+    }
+
+
     private void addPoint(double x, double y) {
         if ((Math.abs(previousPoint.getStartX() - x) + Math.abs(previousPoint.getStartY() - y)) > 2) {
-            drawOnGraph(new Line(previousPoint.getEndX() + 1, previousPoint.getEndY(), x - 1 , y));
+            Line line = new Line(previousPoint.getEndX() + 1, previousPoint.getEndY(), x - 1, y);
+            line.setStrokeWidth(1);
+            drawOnGraph(line, false);
         }
         Line straightLine = new Line(x, y, x + 1, y + 1);
-        currentGraphStraightLines.add(straightLine);
-        drawOnGraph(straightLine);
+        drawOnGraph(straightLine, false);
     }
 
     private void createBoard(boolean hasGridLines) {
@@ -279,6 +388,7 @@ public class Main extends Application {
 
     private void createBoardPanes() {
         graphPane.getChildren().add(drawingsGroup);
+        graphPane.getChildren().add(hoverGroup);
         StackPane graphContainer = new StackPane();
         graphContainer.setPrefWidth(SCREEN_MAX_WIDTH);
         Pane pane = new Pane();
@@ -339,29 +449,36 @@ public class Main extends Application {
     }
 
     private void addLineToGraph(double x1, double y1, double x2, double y2) {
-        Line line = new Line(x1, y1, x2, y2);
-        currentGraphStraightLines.add(line);
-        drawOnGraph(line);
+        Line line = new Line(x1, GRAPH_HEIGHT - y1 + CENTERING_LINE_ON_BORDER, x2, GRAPH_HEIGHT - y2 + CENTERING_LINE_ON_BORDER);
+        drawOnGraph(line, false);
 
     }
 
-    private void drawOnGraph(Line line) {
+    private void drawOnGraph(Line line, boolean hover) {
         line.setStartY(GRAPH_HEIGHT - line.getStartY() + CENTERING_LINE_ON_BORDER);
         line.setEndY(GRAPH_HEIGHT - line.getEndY() + CENTERING_LINE_ON_BORDER);
         line.setStrokeWidth(1);
         Color color = getColor();
         line.setStroke(color);
-        drawingsGroup.getChildren().add(line);
+        if(!hover) {
+            currentGraphStraightLines.add(line);
+            drawingsGroup.getChildren().add(line);
+        }
+        else{
+            hoverGroup.getChildren().add(line);
+        }
     }
 
-    public Color  getColor(){
+    private Color getColor() {
         switch (((ToggleButton) (toggleGroup2.getSelectedToggle())).getText()) {
             case "Black":
                 return Color.BLACK;
             case "Red":
-                return  Color.RED;
+                return Color.RED;
             case "Blue":
                 return Color.BLUE;
+            case "Green":
+                return Color.GREEN;
         }
         return Color.BLACK;
     }
