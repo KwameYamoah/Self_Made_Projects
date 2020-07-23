@@ -99,6 +99,7 @@ public class Main extends Application {
         exit.setOnAction((event) -> Platform.exit());
         menu.getItems().addAll(newGraph, openGraph, saveGraph, exit);
         return menu;
+
     }
 
     private MenuItem createNewGraphMenuItem() {
