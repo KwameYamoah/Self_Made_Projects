@@ -4,7 +4,7 @@ import javafx.scene.paint.Color;
 
 public class Constant {
     public static final int GAME_WINDOW_LENGTH = 600;
-    public static final int BOARD_LENGTH = 10;
+    public static final int BOARD_LENGTH = 20;
     public static final int CELL_SIZE = GAME_WINDOW_LENGTH /BOARD_LENGTH;
     public static final Color SNAKE_BODY_COLOR = Color.RED;
     public static final Color SNAKE_HEAD_COLOR = Color.GREEN;
