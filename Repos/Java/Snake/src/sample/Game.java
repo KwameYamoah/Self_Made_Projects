@@ -58,12 +58,8 @@ public class Game extends Application {
                     GamePanel.changedThisFrame = false;
                     currentTime = now;
                 }
-
             }
         };
         gameTimer.start();
     }
-
-
-
 }

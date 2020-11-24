@@ -1,6 +1,8 @@
 package sample.GameObject;
 
+import javafx.scene.Node;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
@@ -10,9 +12,10 @@ import static sample.Constant.*;
 public class Snake {
     private ArrayList<BodyPart> wholeBody;
     private Pane gameField;
-
-    public Snake(Pane gameField) {
+    private Pane foodPane;
+    public Snake(Pane gameField, Pane foodPane) {
         this.gameField = gameField;
+        this.foodPane = foodPane;
         wholeBody = new ArrayList<>();
         createSnakeHead();
     }
@@ -79,6 +82,10 @@ public class Snake {
 
     public BodyPart getTail() {
         return wholeBody.get(wholeBody.size() - 1);
+    }
+
+    public void eat(Circle food) {
+        foodPane.getChildren().remove(food);
     }
 
 

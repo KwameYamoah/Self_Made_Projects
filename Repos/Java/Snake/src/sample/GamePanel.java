@@ -5,9 +5,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import sample.GameObject.Snake;
+
+import java.util.ArrayList;
 
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
@@ -17,7 +20,8 @@ public class GamePanel extends Pane {
     private Rectangle[][] gameBoard;
     private static Snake snake;
     private static boolean snakeDead = false;
-
+    private static ArrayList<Circle> snakeFood;
+    private static Pane foodPane;
     public GamePanel() {
         createBoard();
         createSnake();
@@ -37,6 +41,7 @@ public class GamePanel extends Pane {
 
 
     public void createBoard() {
+
         gameBoard = new Rectangle[BOARD_LENGTH][BOARD_LENGTH];
         for (int y = 0; y < BOARD_LENGTH; y++) {
             for (int x = 0; x < BOARD_LENGTH; x++) {
@@ -50,11 +55,15 @@ public class GamePanel extends Pane {
                 getChildren().add(rectangle);
             }
         }
+        foodPane = new Pane();
+        getChildren().add(foodPane);
         snakeDead = false;
+        snakeFood = new ArrayList<>();
+
     }
 
     public void createSnake() {
-        snake = new Snake(this);
+        snake = new Snake(this, foodPane);
         for (Snake.BodyPart bodyPart : snake.getWholeBody()) {
             getChildren().add(bodyPart.getRectangle());
         }
@@ -101,9 +110,9 @@ public class GamePanel extends Pane {
 
     public static boolean checkCollision() {
         Rectangle headCollider = snake.getHead().getRectangle();
-        System.out.println(headCollider.getLayoutX());
-        if(headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
-                headCollider.getLayoutY() < 0 || headCollider.getLayoutY() >= GAME_WINDOW_LENGTH){
+
+        if (headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
+                headCollider.getLayoutY() < 0 || headCollider.getLayoutY() >= GAME_WINDOW_LENGTH) {
             snakeDead = true;
             return true;
         }
@@ -115,13 +124,25 @@ public class GamePanel extends Pane {
                     return true;
                 }
             }
+            boolean foodFound = false;
+            Circle foodToRemove = null;
+            for (Circle food : snakeFood) {
+                Rectangle collider = new Rectangle();
+                collider.setLayoutX(food.getLayoutX() - (double)CELL_SIZE/2);
+                collider.setLayoutY(food.getLayoutY()  - (double)CELL_SIZE/2);
+                if (isColliding(headCollider, collider)) {
+                    foodFound = true;
+                    foodToRemove = food;
+                    snake.eat(food);
+                }
+            }
+
+            if(foodFound) snakeFood.remove(foodToRemove);
         }
         return false;
     }
 
     private static boolean isColliding(Rectangle headCollider, Rectangle otherCollider) {
-        System.out.println(headCollider.getLayoutX());
-
         return headCollider.getLayoutX() == otherCollider.getLayoutX() && headCollider.getLayoutY() == otherCollider.getLayoutY();
     }
 
@@ -165,6 +186,7 @@ public class GamePanel extends Pane {
                     else changedThisFrame = false;
                     break;
                 case LEFT:
+                    createFood();
                     if (snake.getHead().getDirection() != RIGHT) snake.getHead().setDirection(LEFT);
                     else changedThisFrame = false;
                     break;
@@ -173,6 +195,7 @@ public class GamePanel extends Pane {
                     break;
                 case SPACE:
                     snake.addBodyPart();
+
                     changedThisFrame = false;
                     break;
             }
@@ -180,11 +203,57 @@ public class GamePanel extends Pane {
         }
     }
 
+    public void createFood(){
+        boolean spotIsEmpty =  false;
+        double x = 0;
+        double y = 0;
+        int tries = 0;
+        while(!spotIsEmpty){
+             x = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
+             y = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
+             spotIsEmpty = checkIfSpotIsEmpty(x,y);
+             tries++;
+            if(tries > 1000){
+                break;
+            }
+        }
+
+        if(spotIsEmpty){
+            Circle circle = new Circle();
+            circle.setLayoutX(x + (double)CELL_SIZE/2);
+            circle.setLayoutY(y + (double)CELL_SIZE/2);
+            circle.setRadius((double)CELL_SIZE/2);
+            circle.setFill(Color.YELLOW);
+            foodPane.getChildren().add(circle);
+            snakeFood.add(circle);
+
+        }
+    }
+
+    public boolean checkIfSpotIsEmpty(double x, double y){
+        Rectangle spot = new Rectangle();
+        spot.setLayoutX(x);
+        spot.setLayoutY(y);
+        for (Snake.BodyPart bodyPart : snake.getWholeBody()) {
+            Rectangle collider = bodyPart.getRectangle();
+            if (isColliding(spot, collider)) {
+                return false;
+            }
+        }
+
+        for (Circle food : snakeFood) {
+            Rectangle collider = new Rectangle();
+            collider.setLayoutX(food.getLayoutX());
+            collider.setLayoutY(food.getLayoutY());
+            if (isColliding(spot, collider)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 
     public static boolean isSnakeDead() {
         return snakeDead;
     }
-
-
 }
