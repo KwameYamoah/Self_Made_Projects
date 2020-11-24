@@ -251,7 +251,8 @@ public class Game extends Application {
         if (!checkShapeCollision(tetrisShape)) {
             overlayOnBoard(tetrisShape);
             return true;
-        } else {
+        }
+        else {
             System.out.println("GameOver");
             gameAnimation.stop();
         }
