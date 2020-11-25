@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
 public class GamePanel extends Pane {
-    public static boolean changedThisFrame = false;
+    public static boolean validInputEnteredThisFrame = false;
     private static KeyCode previousKey = null;
     private Rectangle[][] gameBoard;
     private static Snake snake;
@@ -31,7 +31,6 @@ public class GamePanel extends Pane {
         clear();
         createBoard();
         createSnake();
-        changedThisFrame = false;
         Game.gameTimer.start();
     }
 
@@ -39,9 +38,13 @@ public class GamePanel extends Pane {
         getChildren().clear();
     }
 
+    private void createBoard() {
+        addCells();
+        createPaneAndListToHoldFood();
+        validInputEnteredThisFrame = false;
+    }
 
-    public void createBoard() {
-
+    private void addCells() {
         gameBoard = new Rectangle[BOARD_LENGTH][BOARD_LENGTH];
         for (int y = 0; y < BOARD_LENGTH; y++) {
             for (int x = 0; x < BOARD_LENGTH; x++) {
@@ -55,60 +58,55 @@ public class GamePanel extends Pane {
                 getChildren().add(rectangle);
             }
         }
+    }
+
+    private void createPaneAndListToHoldFood() {
         foodPane = new Pane();
         getChildren().add(foodPane);
-        snakeDead = false;
         snakeFood = new ArrayList<>();
-
     }
 
     public void createSnake() {
         snake = new Snake(this, foodPane);
+        snakeDead = false;
+        addSnakeToPane();
+    }
+
+    private void addSnakeToPane() {
         for (Snake.BodyPart bodyPart : snake.getWholeBody()) {
             getChildren().add(bodyPart.getRectangle());
         }
     }
 
-    public static void move(int force, boolean isVertical) {
-        moveBody();
-        updateDirection(force, isVertical);
-    }
-
-    private static void moveBody() {
-        Snake.BodyPart previous = snake.getHead();
-        if (snake.getBody() != null) {
-            for (Snake.BodyPart bodyPart : snake.getBody()) {
-                previous = bodyPart.moveTo(previous);
-            }
-        }
-    }
-
-    private static void updateDirection(int force, boolean isVertical) {
-        Rectangle head = snake.getHead().getRectangle();
-        if (isVertical) {
-            head.setLayoutY(head.getLayoutY() + force);
-            if ((force > 0)) {
-                snake.getHead().setDirection(DOWN);
-            } else {
-                snake.getHead().setDirection(UP);
-            }
-        } else {
-            head.setLayoutX(head.getLayoutX() + force);
-            if ((force > 0)) {
-                snake.getHead().setDirection(RIGHT);
-            }
-            else {
-                snake.getHead().setDirection(LEFT);
-            }
-        }
-    }
 
     public static void nextLoop() {
+        moveSnake();
         checkCollision();
-        moveSnakeHead();
     }
 
-    public static boolean checkCollision() {
+    private static void moveSnake() {
+        switch (snake.getHead().getDirection()) {
+            case UP:
+                move(-CELL_SIZE, true);
+                break;
+            case RIGHT:
+                move(CELL_SIZE, false);
+                break;
+            case DOWN:
+                move(CELL_SIZE, true);
+                break;
+            case LEFT:
+                move(-CELL_SIZE, false);
+                break;
+        }
+    }
+
+    private static void move(int force, boolean isVertical) {
+        snake.moveBody();
+        snake.moveHead(force, isVertical);
+    }
+
+    private static boolean checkCollision() {
         Rectangle headCollider = snake.getHead().getRectangle();
 
         if (headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
@@ -116,6 +114,7 @@ public class GamePanel extends Pane {
             snakeDead = true;
             return true;
         }
+
         if (snake.getBody() != null) {
             for (Snake.BodyPart bodyPart : snake.getBody()) {
                 Rectangle collider = bodyPart.getRectangle();
@@ -146,22 +145,7 @@ public class GamePanel extends Pane {
         return headCollider.getLayoutX() == otherCollider.getLayoutX() && headCollider.getLayoutY() == otherCollider.getLayoutY();
     }
 
-    private static void moveSnakeHead() {
-        switch (snake.getHead().getDirection()) {
-            case UP:
-                move(-CELL_SIZE, true);
-                break;
-            case RIGHT:
-                move(CELL_SIZE, false);
-                break;
-            case DOWN:
-                move(CELL_SIZE, true);
-                break;
-            case LEFT:
-                move(-CELL_SIZE, false);
-                break;
-        }
-    }
+
 
     public synchronized  void handleInput(KeyEvent event) {
         if(event.getCode()!=KeyCode.R && event.getCode()!=KeyCode.SPACE){
@@ -171,24 +155,24 @@ public class GamePanel extends Pane {
         }
         previousKey = event.getCode();
 
-        if (!changedThisFrame) {
+        if (!validInputEnteredThisFrame) {
             switch (event.getCode()) {
                 case UP:
                     if (snake.getHead().getDirection() != DOWN) snake.getHead().setDirection(UP);
-                    else changedThisFrame = false;
+                    else validInputEnteredThisFrame = false;
                     break;
                 case RIGHT:
                     if (snake.getHead().getDirection() != LEFT) snake.getHead().setDirection(RIGHT);
-                    else changedThisFrame = false;
+                    else validInputEnteredThisFrame = false;
                     break;
                 case DOWN:
                     if (snake.getHead().getDirection() != UP) snake.getHead().setDirection(DOWN);
-                    else changedThisFrame = false;
+                    else validInputEnteredThisFrame = false;
                     break;
                 case LEFT:
                     createFood();
                     if (snake.getHead().getDirection() != RIGHT) snake.getHead().setDirection(LEFT);
-                    else changedThisFrame = false;
+                    else validInputEnteredThisFrame = false;
                     break;
                 case R:
                     this.reset();
@@ -196,10 +180,10 @@ public class GamePanel extends Pane {
                 case SPACE:
                     snake.addBodyPart();
 
-                    changedThisFrame = false;
+                    validInputEnteredThisFrame = false;
                     break;
             }
-            changedThisFrame = true;
+            validInputEnteredThisFrame = true;
         }
     }
 

@@ -55,7 +55,7 @@ public class Game extends Application {
                 }
                 if (Math.abs(currentTime - now) > FPS) {
                     GamePanel.nextLoop();
-                    GamePanel.changedThisFrame = false;
+                    GamePanel.validInputEnteredThisFrame = false;
                     currentTime = now;
                 }
             }

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static sample.Constant.*;
+import static sample.GameObject.Direction.*;
+
 public class Snake {
     private ArrayList<BodyPart> wholeBody;
     private Pane gameField;
@@ -60,6 +62,34 @@ public class Snake {
         BodyPart part = new BodyPart(partRect, direction);
         wholeBody.add(part);
         gameField.getChildren().add(partRect);
+    }
+    public void moveBody() {
+        BodyPart previous = getHead();
+        if (getBody() != null) {
+            for (BodyPart bodyPart : getBody()) {
+                previous = bodyPart.moveTo(previous);
+            }
+        }
+    }
+
+    public void moveHead(int force, boolean isVertical) {
+        Rectangle head = getHead().getRectangle();
+        if (isVertical) {
+            head.setLayoutY(head.getLayoutY() + force);
+            if ((force > 0)) {
+                getHead().setDirection(DOWN);
+            } else {
+                getHead().setDirection(UP);
+            }
+        } else {
+            head.setLayoutX(head.getLayoutX() + force);
+            if ((force > 0)) {
+                getHead().setDirection(RIGHT);
+            }
+            else {
+                getHead().setDirection(LEFT);
+            }
+        }
     }
 
     public List<BodyPart> getBody() {
