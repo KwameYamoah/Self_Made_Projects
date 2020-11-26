@@ -1,6 +1,7 @@
 package sample;
 
 
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
@@ -12,7 +13,6 @@ import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 
 import java.util.ArrayList;
-//TODO : head doesnt eat food alone
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
 public class GamePanel extends Pane {
@@ -23,6 +23,8 @@ public class GamePanel extends Pane {
     private static boolean snakeDead = false;
     private static ArrayList<Circle> snakeFood;
     private static Pane foodPane;
+    private static Label score;
+    private static int scorePoints;
     public GamePanel() {
         createBoard();
         createSnake();
@@ -40,12 +42,22 @@ public class GamePanel extends Pane {
     }
 
     private void createBoard() {
-        addCells();
+        addCells(false);
         createPaneAndListToHoldFood();
         validInputEnteredThisFrame = false;
+        addScoreLabel();
     }
 
-    private void addCells() {
+    private void addScoreLabel() {
+        scorePoints = 0;
+        score = new Label("Score : " + scorePoints);
+        score.setLayoutX(CELL_SIZE*BOARD_LENGTH - (CELL_SIZE * 4));
+        score.setLayoutY(CELL_SIZE);
+        getChildren().add(score);
+    }
+
+    private void addCells(boolean showCells) {
+
         gameBoard = new Rectangle[BOARD_LENGTH][BOARD_LENGTH];
         for (int y = 0; y < BOARD_LENGTH; y++) {
             for (int x = 0; x < BOARD_LENGTH; x++) {
@@ -53,11 +65,21 @@ public class GamePanel extends Pane {
                 rectangle.setLayoutX(x * CELL_SIZE);
                 rectangle.setLayoutY(y * CELL_SIZE);
                 rectangle.setFill(Color.WHITE);
-                rectangle.setStroke(Color.BLACK);
-                rectangle.setStrokeType(StrokeType.INSIDE);
+                if(showCells) {
+                    rectangle.setStroke(Color.BLACK);
+                    rectangle.setStrokeType(StrokeType.INSIDE);
+                }
                 gameBoard[y][x] = rectangle;
                 getChildren().add(rectangle);
             }
+        }
+        if(!showCells){
+            Rectangle border = new Rectangle(CELL_SIZE*BOARD_LENGTH, CELL_SIZE*BOARD_LENGTH);
+            border.setFill(Color.WHITE);
+            border.setStroke(Color.BLACK);
+            border.setStrokeType(StrokeType.INSIDE);
+            border.setStrokeWidth(1);
+            getChildren().add(border);
         }
     }
 
@@ -115,11 +137,26 @@ public class GamePanel extends Pane {
 
         if (snake.getBody() != null && headCollidedWithBody(headCollider)) return true;
 
-        ifHeadCollidesWithFood(headCollider);
+        if(ifHeadCollidesWithFood(headCollider)){
+            addPoints(100);
+        }
         return false;
     }
 
-    private static void ifHeadCollidesWithFood(Rectangle headCollider) {
+
+
+    private static boolean headCollidedWithBody(Rectangle headCollider) {
+        for (Snake.BodyPart bodyPart : snake.getBody()) {
+            Rectangle collider = bodyPart.getRectangle();
+            if (isColliding(headCollider, collider)) {
+                snakeDead = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean ifHeadCollidesWithFood(Rectangle headCollider) {
         boolean foodFound = false;
         Circle foodToRemove = null;
         for (Circle food : snakeFood) {
@@ -133,19 +170,16 @@ public class GamePanel extends Pane {
                 snake.eat(food);
             }
         }
+
+        //Method could be simplified? removed returns a boolean
         if(foodFound) snakeFood.remove(foodToRemove);
+        return foodFound;
+    }
+    private static void addPoints(int points) {
+        scorePoints += points;
+        score.setText("Score : " + scorePoints);
     }
 
-    private static boolean headCollidedWithBody(Rectangle headCollider) {
-        for (Snake.BodyPart bodyPart : snake.getBody()) {
-            Rectangle collider = bodyPart.getRectangle();
-            if (isColliding(headCollider, collider)) {
-                snakeDead = true;
-                return true;
-            }
-        }
-        return false;
-    }
 
     private static boolean outOfField(Rectangle headCollider) {
         if (headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
