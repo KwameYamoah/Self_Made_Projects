@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 
 import java.util.ArrayList;
@@ -171,33 +172,17 @@ public class GamePanel extends Pane {
         if (!validInputEnteredThisFrame) {
             switch (event.getCode()) {
                 case UP:
-                    if (snake.getHead().getDirection() != DOWN) {
-                        snake.getHead().setDirection(UP);
-                        validInputEnteredThisFrame = true;
-                    }
-                    else validInputEnteredThisFrame = false;
+                   changeHeadDirection(UP);
                     break;
                 case RIGHT:
-                    if (snake.getHead().getDirection() != LEFT) {
-                        snake.getHead().setDirection(RIGHT);
-                        validInputEnteredThisFrame = true;
-                    }
-                    else validInputEnteredThisFrame = false;
+                    changeHeadDirection(RIGHT);
                     break;
                 case DOWN:
-                    if (snake.getHead().getDirection() != UP) {
-                        snake.getHead().setDirection(DOWN);
-                        validInputEnteredThisFrame = true;
-                    }
-                    else validInputEnteredThisFrame = false;
+                    changeHeadDirection(DOWN);
                     break;
                 case LEFT:
                     createFood();
-                    if (snake.getHead().getDirection() != RIGHT) {
-                        snake.getHead().setDirection(LEFT);
-                        validInputEnteredThisFrame = true;
-                    }
-                    else validInputEnteredThisFrame = false;
+                    changeHeadDirection(LEFT);
                     break;
                 case R:
                     this.reset();
@@ -209,6 +194,18 @@ public class GamePanel extends Pane {
             }
 
         }
+    }
+
+    public void changeHeadDirection(Direction direction){
+        Snake.BodyPart snakeHead = snake.getHead();
+        if(!Direction.isOpposite(snakeHead.getDirection(), direction)){
+            snakeHead.setDirection(direction);
+            validInputEnteredThisFrame = true;
+        }
+        else{
+            validInputEnteredThisFrame = false;
+        }
+
     }
 
     public void createFood(){
@@ -227,14 +224,7 @@ public class GamePanel extends Pane {
         }
 
         if(spotIsEmpty){
-            Circle circle = new Circle();
-            circle.setLayoutX(x + (double)CELL_SIZE/2);
-            circle.setLayoutY(y + (double)CELL_SIZE/2);
-            circle.setRadius((double)CELL_SIZE/2);
-            circle.setFill(Color.YELLOW);
-            foodPane.getChildren().add(circle);
-            snakeFood.add(circle);
-
+            createSnakeFoodAt(x, y);
         }
     }
 
@@ -242,6 +232,7 @@ public class GamePanel extends Pane {
         Rectangle spot = new Rectangle();
         spot.setLayoutX(x);
         spot.setLayoutY(y);
+
         for (Snake.BodyPart bodyPart : snake.getWholeBody()) {
             Rectangle collider = bodyPart.getRectangle();
             if (isColliding(spot, collider)) {
@@ -259,7 +250,15 @@ public class GamePanel extends Pane {
         }
         return true;
     }
-
+    private void createSnakeFoodAt(double x, double y) {
+        Circle circle = new Circle();
+        circle.setLayoutX(x + (double)CELL_SIZE/2);
+        circle.setLayoutY(y + (double)CELL_SIZE/2);
+        circle.setRadius((double)CELL_SIZE/2);
+        circle.setFill(Color.YELLOW);
+        foodPane.getChildren().add(circle);
+        snakeFood.add(circle);
+    }
 
     public static boolean isSnakeDead() {
         return snakeDead;
