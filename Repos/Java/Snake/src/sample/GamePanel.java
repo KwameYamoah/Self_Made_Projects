@@ -12,7 +12,7 @@ import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 
 import java.util.ArrayList;
-
+//TODO : head doesnt eat food alone
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
 public class GamePanel extends Pane {
@@ -112,10 +112,10 @@ public class GamePanel extends Pane {
 
         if (outOfField(headCollider)) return true;
 
-        if (snake.getBody() != null) {
-            if (headCollidedWithBody(headCollider)) return true;
-            ifHeadCollidesWithFood(headCollider);
-        }
+
+        if (snake.getBody() != null && headCollidedWithBody(headCollider)) return true;
+
+        ifHeadCollidesWithFood(headCollider);
         return false;
     }
 
@@ -127,6 +127,7 @@ public class GamePanel extends Pane {
             collider.setLayoutX(food.getLayoutX() - (double)CELL_SIZE/2);
             collider.setLayoutY(food.getLayoutY()  - (double)CELL_SIZE/2);
             if (isColliding(headCollider, collider)) {
+                System.out.println(headCollider.getLayoutX());
                 foodFound = true;
                 foodToRemove = food;
                 snake.eat(food);
