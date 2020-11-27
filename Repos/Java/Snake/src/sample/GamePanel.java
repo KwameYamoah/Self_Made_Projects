@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.text.Font;
 import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 
@@ -53,10 +54,19 @@ public class GamePanel extends Pane {
         score = new Label("Score : " + scorePoints);
         score.setLayoutX(CELL_SIZE*BOARD_LENGTH - (CELL_SIZE * 4));
         score.setLayoutY(CELL_SIZE);
+        score.setFont(new Font("Arial", 15));
         getChildren().add(score);
     }
 
-    private void addCells(boolean showCells) {
+    private void addCells(boolean showDarkOutlines) {
+        if(!showDarkOutlines){
+            Rectangle border = new Rectangle(CELL_SIZE*BOARD_LENGTH, CELL_SIZE*BOARD_LENGTH);
+            border.setFill(Color.WHITE);
+            border.setStroke(Color.BLACK);
+            border.setStrokeType(StrokeType.OUTSIDE);
+            border.setStrokeWidth(2);
+            getChildren().add(border);
+        }
 
         gameBoard = new Rectangle[BOARD_LENGTH][BOARD_LENGTH];
         for (int y = 0; y < BOARD_LENGTH; y++) {
@@ -65,22 +75,19 @@ public class GamePanel extends Pane {
                 rectangle.setLayoutX(x * CELL_SIZE);
                 rectangle.setLayoutY(y * CELL_SIZE);
                 rectangle.setFill(Color.WHITE);
-                if(showCells) {
+                if(showDarkOutlines) {
                     rectangle.setStroke(Color.BLACK);
-                    rectangle.setStrokeType(StrokeType.INSIDE);
                 }
+                else{
+                    rectangle.setStroke(Color.valueOf("rgb(208, 214, 209)"));
+                }
+                rectangle.setStrokeType(StrokeType.INSIDE);
+
                 gameBoard[y][x] = rectangle;
                 getChildren().add(rectangle);
             }
         }
-        if(!showCells){
-            Rectangle border = new Rectangle(CELL_SIZE*BOARD_LENGTH, CELL_SIZE*BOARD_LENGTH);
-            border.setFill(Color.WHITE);
-            border.setStroke(Color.BLACK);
-            border.setStrokeType(StrokeType.INSIDE);
-            border.setStrokeWidth(1);
-            getChildren().add(border);
-        }
+
     }
 
     private void createPaneAndListToHoldFood() {
