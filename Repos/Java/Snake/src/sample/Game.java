@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 import static sample.Constant.*;
 
 public class Game extends Application {
-    public static GamePanel gamePanel;
+    public static FieldPanel fieldPanel;
     public static AnimationTimer gameTimer;
 
     public static void main(String[] args) {
@@ -25,15 +25,15 @@ public class Game extends Application {
     }
 
     private BorderPane createGamePane() {
-        gamePanel = new GamePanel();
+        fieldPanel = new FieldPanel();
         BorderPane root = new BorderPane();
-        root.setCenter(gamePanel);
+        root.setCenter(new GamePanel(fieldPanel));
         return root;
     }
 
     private Scene createScene(BorderPane gamePane) {
-        Scene scene = new Scene(gamePane, GAME_WINDOW_LENGTH, GAME_WINDOW_LENGTH);
-        scene.setOnKeyPressed(event -> gamePanel.handleInput(event));
+        Scene scene = new Scene(gamePane, GAME_WINDOW_LENGTH + BORDER_THICKNESS * 2, GAME_WINDOW_LENGTH + BORDER_THICKNESS * 2);
+        scene.setOnKeyPressed(event -> fieldPanel.handleInput(event));
         return scene;
     }
 
@@ -48,14 +48,14 @@ public class Game extends Application {
             long currentTime = 0;
             @Override
             public void handle(long now) {
-                if(GamePanel.isSnakeDead()){
+                if(FieldPanel.isSnakeDead()){
                     //Game over
                     System.out.println("Game Over");
                     stop();
                 }
                 if (Math.abs(currentTime - now) > FPS) {
-                    GamePanel.nextLoop();
-                    GamePanel.validInputEnteredThisFrame = false;
+                    FieldPanel.nextLoop();
+                    FieldPanel.validInputEnteredThisFrame = false;
                     currentTime = now;
                 }
             }
