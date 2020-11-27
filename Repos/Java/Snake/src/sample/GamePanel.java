@@ -146,6 +146,7 @@ public class GamePanel extends Pane {
 
         if(ifHeadCollidesWithFood(headCollider)){
             addPoints(100);
+            snake.addBodyPart();
         }
         return false;
     }
@@ -223,15 +224,11 @@ public class GamePanel extends Pane {
                     changeHeadDirection(DOWN);
                     break;
                 case LEFT:
-                    createFood();
                     changeHeadDirection(LEFT);
+                    createFood();
                     break;
                 case R:
                     this.reset();
-                    break;
-                case SPACE:
-                    snake.addBodyPart();
-                    validInputEnteredThisFrame = false;
                     break;
             }
 
