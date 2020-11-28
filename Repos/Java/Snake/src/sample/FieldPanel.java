@@ -1,7 +1,6 @@
 package sample;
 
 
-import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -27,6 +26,8 @@ public class FieldPanel extends Pane {
     private static Pane foodPane;
     private static Label score;
     private static int scorePoints;
+    private static final int POINTS_PER_FOOD = 100;
+
     public FieldPanel() {
         createBoard();
         createSnake();
@@ -103,7 +104,6 @@ public class FieldPanel extends Pane {
 
     public static void nextLoop() {
         moveSnake();
-        checkCollision();
     }
 
     private static void moveSnake() {
@@ -124,20 +124,31 @@ public class FieldPanel extends Pane {
     }
 
     private static void move(int force, boolean isVertical) {
-        snake.moveBody();
-        snake.moveHead(force, isVertical);
+        if (!checkIfSnakeWillCollide(force, isVertical)) {
+            snake.moveBody();
+            snake.moveHead(force, isVertical);
+        }
+
     }
 
-    private static boolean checkCollision() {
+    private static boolean checkIfSnakeWillCollide(int force, boolean isVertical) {
+        snake.moveHead(force, isVertical);
+        boolean ifWillCollide = checkIfSnakeIsCurrentlyColliding();
+        snake.moveHead(-force, isVertical);
+        return ifWillCollide;
+    }
+
+    private static boolean checkIfSnakeIsCurrentlyColliding() {
         Rectangle headCollider = snake.getHead().getRectangle();
-
         if (outOfField(headCollider)) return true;
-
-
-        if (snake.getBody() != null && headCollidedWithBody(headCollider)) return true;
+        if (snake.getBody() != null && headCollidedWithBody(headCollider)) {
+            snakeDead = true;
+            return true;
+        }
 
         if(ifHeadCollidesWithFood(headCollider)){
-            addPoints(100);
+
+            addPoints(POINTS_PER_FOOD);
             snake.addBodyPart();
         }
         return false;
@@ -149,7 +160,7 @@ public class FieldPanel extends Pane {
         for (Snake.BodyPart bodyPart : snake.getBody()) {
             Rectangle collider = bodyPart.getRectangle();
             if (isColliding(headCollider, collider)) {
-                snakeDead = true;
+
                 return true;
             }
         }
