@@ -104,6 +104,7 @@ public class FieldPanel extends Pane {
 
     public static void nextLoop() {
         moveSnake();
+        createFood();
     }
 
     private static void moveSnake() {
@@ -228,7 +229,6 @@ public class FieldPanel extends Pane {
                     break;
                 case LEFT:
                     changeHeadDirection(LEFT);
-                    createFood();
                     break;
                 case R:
                     this.reset();
@@ -250,27 +250,29 @@ public class FieldPanel extends Pane {
 
     }
 
-    public void createFood(){
-        boolean spotIsEmpty =  false;
-        double x = 0;
-        double y = 0;
-        int tries = 0;
-        while(!spotIsEmpty){
-             x = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
-             y = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
-             spotIsEmpty = checkIfSpotIsEmpty(x,y);
-             tries++;
-            if(tries > 1000){
-                break;
+    public static void createFood(){
+        if(snakeFood.isEmpty()){
+            boolean spotIsEmpty =  false;
+            double x = 0;
+            double y = 0;
+            int tries = 0;
+            while(!spotIsEmpty){
+                 x = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                 y = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                 spotIsEmpty = checkIfSpotIsEmpty(x,y);
+                 tries++;
+                if(tries > 1000){
+                    break;
+                }
             }
-        }
 
-        if(spotIsEmpty){
-            createSnakeFoodAt(x, y);
+            if(spotIsEmpty){
+                createSnakeFoodAt(x, y);
+            }
         }
     }
 
-    public boolean checkIfSpotIsEmpty(double x, double y){
+    public static boolean checkIfSpotIsEmpty(double x, double y){
         Rectangle spot = new Rectangle();
         spot.setLayoutX(x);
         spot.setLayoutY(y);
@@ -292,7 +294,7 @@ public class FieldPanel extends Pane {
         }
         return true;
     }
-    private void createSnakeFoodAt(double x, double y) {
+    private static void createSnakeFoodAt(double x, double y) {
         Circle circle = new Circle();
         circle.setLayoutX(x + (double)CELL_SIZE/2);
         circle.setLayoutY(y + (double)CELL_SIZE/2);
