@@ -11,12 +11,12 @@ import sample.Game;
 
 import static sample.Constant.GAME_WINDOW_LENGTH;
 
-public class MainMenu extends BorderPane {
+public class ModeMenu extends BorderPane {
     private GamePanel gamePanel;
-    private Button start = new Button("Start");
-    private Button exit = new Button("Exit");
+    private Button normalMode = new Button("Normal Mode");
+    private Button wrapAroundMode = new Button("Wrap Around Mode");
 
-    public MainMenu(GamePanel gamePanel) {
+    public ModeMenu(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         setPrefSize((double) GAME_WINDOW_LENGTH / 2, (double) GAME_WINDOW_LENGTH / 2);
         styleButtons();
@@ -25,30 +25,30 @@ public class MainMenu extends BorderPane {
     }
 
     private void styleButtons() {
-        start.setFont(new Font("Arial", 15));
-        exit.setFont(new Font("Arial", 15));
-        start.setMinWidth(100);
-        exit.setMinWidth(100);
+        normalMode.setFont(new Font("Arial", 15));
+        wrapAroundMode.setFont(new Font("Arial", 15));
+        normalMode.setMinWidth(100);
+        wrapAroundMode.setMinWidth(100);
     }
 
     private void addEventsToButtons() {
-        start.setOnAction((event) -> {
+        normalMode.setOnAction((event) -> {
             getChildren().clear();
-            Game.primaryStage.getScene().setRoot(new ModeMenu(gamePanel));
+            Game.primaryStage.getScene().setRoot(gamePanel);
             Game.primaryStage.sizeToScene();
             Game.primaryStage.centerOnScreen();
         });
 
-        exit.setOnAction((event -> {
-            Platform.exit();
+        wrapAroundMode.setOnAction((event -> {
+            //TODO
         }));
     }
 
     private void addButtons() {
         FlowPane buttons = new FlowPane();
         buttons.setVgap(20);
-        buttons.getChildren().add(start);
-        buttons.getChildren().add(exit);
+        buttons.getChildren().add(normalMode);
+        buttons.getChildren().add(wrapAroundMode);
         buttons.setOrientation(Orientation.VERTICAL);
         buttons.setAlignment(Pos.CENTER);
         setCenter(buttons);

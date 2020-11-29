@@ -10,7 +10,6 @@ import javafx.scene.shape.StrokeType;
 import static sample.Constant.*;
 
 public class GamePanel extends BorderPane {
-
         public GamePanel(Pane fieldPanel){
             Rectangle border = new Rectangle(CELL_SIZE*BOARD_LENGTH + BORDER_THICKNESS * 2, CELL_SIZE*BOARD_LENGTH  + BORDER_THICKNESS * 2) ;
             border.setFill(Color.WHITE);
