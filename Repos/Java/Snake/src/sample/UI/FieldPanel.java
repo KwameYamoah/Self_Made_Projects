@@ -1,4 +1,4 @@
-package sample;
+package sample.UI;
 
 
 import javafx.scene.control.Label;
@@ -10,6 +10,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Font;
+import sample.Game;
 import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 
@@ -29,6 +30,7 @@ public class FieldPanel extends Pane {
     private static final int POINTS_PER_FOOD = 100;
 
     public FieldPanel() {
+
         createBoard();
         createSnake();
     }
@@ -294,6 +296,7 @@ public class FieldPanel extends Pane {
         }
         return true;
     }
+
     private static void createSnakeFoodAt(double x, double y) {
         Circle circle = new Circle();
         circle.setLayoutX(x + (double)CELL_SIZE/2);

@@ -5,34 +5,41 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import sample.UI.FieldPanel;
+import sample.UI.GamePanel;
+import sample.UI.MainMenu;
+
 
 import static sample.Constant.*;
 
 public class Game extends Application {
     public static FieldPanel fieldPanel;
     public static AnimationTimer gameTimer;
-
+    public static Stage primaryStage;
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        BorderPane gamePane = createGamePane();
-        Scene scene = createScene(gamePane);
+        Game.primaryStage = primaryStage;
+        BorderPane gameWindow = createGameWindow();
+        Scene scene = createScene(gameWindow);
+        primaryStage.sizeToScene();
         loadScene(primaryStage, scene);
         createGameLoop();
+
     }
 
-    private BorderPane createGamePane() {
+    private BorderPane createGameWindow() {
         fieldPanel = new FieldPanel();
         BorderPane root = new BorderPane();
-        root.setCenter(new GamePanel(fieldPanel));
+        root.setCenter(new MainMenu(new GamePanel(fieldPanel)));
         return root;
     }
 
     private Scene createScene(BorderPane gamePane) {
-        Scene scene = new Scene(gamePane, GAME_WINDOW_LENGTH + BORDER_THICKNESS * 2, GAME_WINDOW_LENGTH + BORDER_THICKNESS * 2);
+        Scene scene = new Scene(gamePane);
         scene.setOnKeyPressed(event -> fieldPanel.handleInput(event));
         return scene;
     }
@@ -43,7 +50,7 @@ public class Game extends Application {
         primaryStage.show();
     }
 
-    private void createGameLoop() {
+    public static void createGameLoop() {
         gameTimer = new AnimationTimer() {
             long currentTime = 0;
             @Override

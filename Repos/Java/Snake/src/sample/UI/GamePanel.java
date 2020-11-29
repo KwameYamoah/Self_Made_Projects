@@ -1,4 +1,4 @@
-package sample;
+package sample.UI;
 
 import javafx.geometry.Insets;
 import javafx.scene.layout.BorderPane;
@@ -19,7 +19,6 @@ public class GamePanel extends BorderPane {
             border.setStrokeWidth(BORDER_THICKNESS);
             getChildren().add(border);
             setPadding(new Insets(BORDER_THICKNESS));
-
             setCenter(fieldPanel);
         }
 }
