@@ -1,6 +1,5 @@
 package sample.GameObject;
 
-import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -72,17 +71,30 @@ public class Snake {
         }
     }
 
-    public void moveHead(int force, boolean isVertical) {
+    public void moveHead(int force, boolean isVertical, boolean isWrapAround) {
         Rectangle head = getHead().getRectangle();
         if (isVertical) {
-            head.setLayoutY(head.getLayoutY() + force);
+            double newYLocation = head.getLayoutY() + force;
+            if(isWrapAround) {
+                newYLocation = getWrappedPosition(newYLocation);
+            }
+            head.setLayoutY(newYLocation);
             if ((force > 0)) {
                 getHead().setDirection(DOWN);
             } else {
                 getHead().setDirection(UP);
             }
+
         } else {
-            head.setLayoutX(head.getLayoutX() + force);
+
+            double newXLocation = head.getLayoutX() + force;
+            System.out.println("Before - " + newXLocation);
+            if(isWrapAround) {
+                newXLocation = getWrappedPosition(newXLocation);
+            }
+            System.out.println("After - " + newXLocation);
+            System.out.println();
+            head.setLayoutX(newXLocation);
             if ((force > 0)) {
                 getHead().setDirection(RIGHT);
             }
@@ -90,6 +102,14 @@ public class Snake {
                 getHead().setDirection(LEFT);
             }
         }
+    }
+
+    private double getWrappedPosition(double newLocation) {
+        if (newLocation < 0) {
+            newLocation = GAME_WINDOW_LENGTH + newLocation;
+        }
+        newLocation = newLocation % GAME_WINDOW_LENGTH;
+        return newLocation;
     }
 
     public List<BodyPart> getBody() {

@@ -1,7 +1,6 @@
 package sample.UI;
 
 
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -22,6 +21,7 @@ public class FieldPanel extends Pane {
     public static boolean validInputEnteredThisFrame = false;
     private static KeyCode previousKey = null;
     private Rectangle[][] gameBoard;
+    public static boolean isWrapAround;
     private static Snake snake;
     private static boolean snakeDead = false;
     private static ArrayList<Circle> snakeFood;
@@ -29,10 +29,10 @@ public class FieldPanel extends Pane {
     private static Label score;
     private static int scorePoints;
     private static Label label;
-
     private static final int POINTS_PER_FOOD = 100;
 
-    public FieldPanel() {
+    public FieldPanel(boolean isWrapAround) {
+        this.isWrapAround = isWrapAround;
         createBoard();
         createSnake();
     }
@@ -142,15 +142,18 @@ public class FieldPanel extends Pane {
     private static void move(int force, boolean isVertical) {
         if (!checkIfSnakeWillCollide(force, isVertical)) {
             snake.moveBody();
-            snake.moveHead(force, isVertical);
+
+            snake.moveHead(force, isVertical, isWrapAround);
+
+
         }
 
     }
 
     private static boolean checkIfSnakeWillCollide(int force, boolean isVertical) {
-        snake.moveHead(force, isVertical);
+        snake.moveHead(force, isVertical, isWrapAround);
         boolean ifWillCollide = checkIfSnakeIsCurrentlyColliding();
-        snake.moveHead(-force, isVertical);
+        snake.moveHead(-force, isVertical, isWrapAround);
         return ifWillCollide;
     }
 
@@ -219,6 +222,7 @@ public class FieldPanel extends Pane {
     }
 
     private static void gameOver() {
+        label.setText("GameOver, Your score was " + scorePoints + "\nPress R to retry");
         label.setVisible(true);
         snakeDead = true;
     }
@@ -255,7 +259,6 @@ public class FieldPanel extends Pane {
                     if(snakeDead){
                         this.reset();
                     }
-
                     break;
             }
 

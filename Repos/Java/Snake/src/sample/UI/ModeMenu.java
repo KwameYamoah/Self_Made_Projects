@@ -16,8 +16,7 @@ public class ModeMenu extends BorderPane {
     private Button normalMode = new Button("Normal Mode");
     private Button wrapAroundMode = new Button("Wrap Around Mode");
 
-    public ModeMenu(GamePanel gamePanel) {
-        this.gamePanel = gamePanel;
+    public ModeMenu() {
         setPrefSize((double) GAME_WINDOW_LENGTH / 2, (double) GAME_WINDOW_LENGTH / 2);
         styleButtons();
         addEventsToButtons();
@@ -34,14 +33,21 @@ public class ModeMenu extends BorderPane {
     private void addEventsToButtons() {
         normalMode.setOnAction((event) -> {
             getChildren().clear();
+            gamePanel = new GamePanel(new FieldPanel(false));
             Game.primaryStage.getScene().setRoot(gamePanel);
             Game.primaryStage.sizeToScene();
             Game.primaryStage.centerOnScreen();
         });
 
         wrapAroundMode.setOnAction((event -> {
+            getChildren().clear();
+            gamePanel = new GamePanel(new FieldPanel(true));
+            Game.primaryStage.getScene().setRoot(gamePanel);
+            Game.primaryStage.sizeToScene();
+            Game.primaryStage.centerOnScreen();
             //TODO: set up wrap around parameters
         }));
+
     }
 
     private void addButtons() {

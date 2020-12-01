@@ -6,7 +6,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import sample.UI.FieldPanel;
-import sample.UI.GamePanel;
 import sample.UI.MainMenu;
 
 
@@ -32,9 +31,9 @@ public class Game extends Application {
     }
 
     private BorderPane createGameWindow() {
-        fieldPanel = new FieldPanel();
+        fieldPanel = new FieldPanel(true);
         BorderPane root = new BorderPane();
-        root.setCenter(new MainMenu(new GamePanel(fieldPanel)));
+        root.setCenter(new MainMenu());
         return root;
     }
 

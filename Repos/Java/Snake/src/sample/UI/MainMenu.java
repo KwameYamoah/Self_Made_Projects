@@ -12,12 +12,10 @@ import sample.Game;
 import static sample.Constant.GAME_WINDOW_LENGTH;
 
 public class MainMenu extends BorderPane {
-    private GamePanel gamePanel;
     private Button start = new Button("Start");
     private Button exit = new Button("Exit");
 
-    public MainMenu(GamePanel gamePanel) {
-        this.gamePanel = gamePanel;
+    public MainMenu() {
         setPrefSize((double) GAME_WINDOW_LENGTH / 2, (double) GAME_WINDOW_LENGTH / 2);
         styleButtons();
         addEventsToButtons();
@@ -34,7 +32,7 @@ public class MainMenu extends BorderPane {
     private void addEventsToButtons() {
         start.setOnAction((event) -> {
             getChildren().clear();
-            Game.primaryStage.getScene().setRoot(new ModeMenu(gamePanel));
+            Game.primaryStage.getScene().setRoot(new ModeMenu());
             Game.primaryStage.sizeToScene();
             Game.primaryStage.centerOnScreen();
         });
