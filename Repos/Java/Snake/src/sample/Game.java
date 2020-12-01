@@ -56,7 +56,6 @@ public class Game extends Application {
             @Override
             public void handle(long now) {
                 if(FieldPanel.isSnakeDead()){
-                    //Game over
                     System.out.println("Game Over");
                     stop();
                 }

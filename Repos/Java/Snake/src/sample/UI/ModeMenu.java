@@ -40,7 +40,7 @@ public class ModeMenu extends BorderPane {
         });
 
         wrapAroundMode.setOnAction((event -> {
-            //TODO
+            //TODO: set up wrap around parameters
         }));
     }
 

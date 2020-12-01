@@ -1,6 +1,7 @@
 package sample.UI;
 
 
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -27,10 +28,11 @@ public class FieldPanel extends Pane {
     private static Pane foodPane;
     private static Label score;
     private static int scorePoints;
+    private static Label label;
+
     private static final int POINTS_PER_FOOD = 100;
 
     public FieldPanel() {
-
         createBoard();
         createSnake();
     }
@@ -50,16 +52,26 @@ public class FieldPanel extends Pane {
         addCells(false);
         createPaneAndListToHoldFood();
         validInputEnteredThisFrame = false;
-        addScoreLabel();
+        addLevelDetails();
     }
 
-    private void addScoreLabel() {
+    private void addLevelDetails() {
         scorePoints = 0;
         score = new Label("Score : " + scorePoints);
-        score.setLayoutX(CELL_SIZE*BOARD_LENGTH - (CELL_SIZE * 4));
+        score.setLayoutX(CELL_SIZE*BOARD_LENGTH - (CELL_SIZE * 2));
         score.setLayoutY(CELL_SIZE);
         score.setFont(new Font("Arial", 15));
         getChildren().add(score);
+
+        label = new Label("GameOver, Your score was " + scorePoints + "\nPress R to retry");
+
+        label.layoutXProperty().bind(widthProperty().subtract(label.widthProperty()).divide(2));
+        label.layoutYProperty().bind(heightProperty().subtract(label.heightProperty()).divide(2));
+        label.setFont(new Font("Arial", 30));
+        label.setTextFill(Color.PURPLE);
+        getChildren().add(label);
+        label.setVisible(false);
+
     }
 
     private void addCells(boolean showDarkOutlines) {
@@ -95,6 +107,7 @@ public class FieldPanel extends Pane {
         snake = new Snake(this, foodPane);
         snakeDead = false;
         addSnakeToPane();
+        System.out.println("----");
     }
 
     private void addSnakeToPane() {
@@ -145,14 +158,14 @@ public class FieldPanel extends Pane {
         Rectangle headCollider = snake.getHead().getRectangle();
         if (outOfField(headCollider)) return true;
         if (snake.getBody() != null && headCollidedWithBody(headCollider)) {
-            snakeDead = true;
+            gameOver();
             return true;
         }
 
         if(ifHeadCollidesWithFood(headCollider)){
-
             addPoints(POINTS_PER_FOOD);
             snake.addBodyPart();
+
         }
         return false;
     }
@@ -169,6 +182,7 @@ public class FieldPanel extends Pane {
         }
         return false;
     }
+
 
     private static boolean ifHeadCollidesWithFood(Rectangle headCollider) {
         boolean foodFound = false;
@@ -198,10 +212,15 @@ public class FieldPanel extends Pane {
     private static boolean outOfField(Rectangle headCollider) {
         if (headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
                 headCollider.getLayoutY() < 0 || headCollider.getLayoutY() >= GAME_WINDOW_LENGTH) {
-            snakeDead = true;
+            gameOver();
             return true;
         }
         return false;
+    }
+
+    private static void gameOver() {
+        label.setVisible(true);
+        snakeDead = true;
     }
 
     private static boolean isColliding(Rectangle headCollider, Rectangle otherCollider) {
@@ -233,7 +252,10 @@ public class FieldPanel extends Pane {
                     changeHeadDirection(LEFT);
                     break;
                 case R:
-                    this.reset();
+                    if(snakeDead){
+                        this.reset();
+                    }
+
                     break;
             }
 
