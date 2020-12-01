@@ -142,10 +142,7 @@ public class FieldPanel extends Pane {
     private static void move(int force, boolean isVertical) {
         if (!checkIfSnakeWillCollide(force, isVertical)) {
             snake.moveBody();
-
             snake.moveHead(force, isVertical, isWrapAround);
-
-
         }
 
     }
