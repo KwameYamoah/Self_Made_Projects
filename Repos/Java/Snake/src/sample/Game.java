@@ -56,7 +56,6 @@ public class Game extends Application {
                     FieldPanel.nextLoop();
                     currentTime = now;
                     if(FieldPanel.isSnakeDead()){
-                        System.out.println("Setting back to false 3");
                         FieldPanel.validInputEnteredThisFrame = false;
                         stop();
                     }

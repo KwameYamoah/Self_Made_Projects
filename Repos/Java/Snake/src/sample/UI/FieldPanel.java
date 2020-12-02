@@ -13,7 +13,9 @@ import javafx.scene.text.Font;
 import sample.Game;
 import sample.GameObject.Direction;
 import sample.GameObject.Snake;
-
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import java.io.File;
 import java.util.ArrayList;
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
@@ -30,6 +32,8 @@ public class FieldPanel extends Pane {
     private static int scorePoints;
     private static Label label;
     private static final int POINTS_PER_FOOD = 100;
+    private static MediaPlayer mediaPlayer;
+    private static MediaPlayer mediaPlayer2;
 
     public FieldPanel(boolean isWrapAround) {
         FieldPanel.isWrapAround = isWrapAround;
@@ -37,12 +41,24 @@ public class FieldPanel extends Pane {
         reset();
     }
 
+    private void setSnakeDeathPlayer() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\deathEffect.wav").toURI().toString());
+        mediaPlayer2 = new MediaPlayer(media);
+        mediaPlayer2.setVolume(0.2);
+    }
+
     public void reset(){
         clear();
         createBoard();
         createSnake();
+        setSnakeDeathPlayer();
         Game.gameTimer.start();
+        playBackgroundMusic();
+
     }
+
+
 
     private void clear() {
         getChildren().clear();
@@ -113,11 +129,21 @@ public class FieldPanel extends Pane {
         }
     }
 
+    private void playBackgroundMusic() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\actionRetroMusic.mp3").toURI().toString());
+        mediaPlayer = new MediaPlayer(media);
+        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+        mediaPlayer.setAutoPlay(true);
+        mediaPlayer.setVolume(0.2);
+
+    }
+
     public static void nextLoop() {
         moveSnake();
         createFood();
-        System.out.println("Setting back to false 1");
         validInputEnteredThisFrame = false;
+        score.toFront();
     }
 
     private static void moveSnake() {
@@ -219,6 +245,8 @@ public class FieldPanel extends Pane {
         label.setText("GameOver, Your score was " + scorePoints + "\nPress R to retry");
         label.setVisible(true);
         label.toFront();
+        mediaPlayer.stop();
+        mediaPlayer2.play();
         snakeDead = true;
     }
 
@@ -229,30 +257,23 @@ public class FieldPanel extends Pane {
     public synchronized void handleInput(KeyEvent event) {
         if (checkIFKeyIsTheSame(event)) return;
 
-        if(validInputEnteredThisFrame) System.out.println("Key pressed when valid input entered");
 
         if (!validInputEnteredThisFrame) {
             switch (event.getCode()) {
                 case UP:
-                    System.out.println("UP pressed");
                     changeHeadDirection(UP);
                     break;
                 case RIGHT:
-                    System.out.println("RIGHT pressed");
                     changeHeadDirection(RIGHT);
                     break;
                 case DOWN:
-                    System.out.println("DOWN pressed");
                     changeHeadDirection(DOWN);
                     break;
                 case LEFT:
-                    System.out.println("LEFT pressed");
                     changeHeadDirection(LEFT);
                     break;
                 case R:
-                    System.out.println("R pressed");
                     if(snakeDead) {
-                        System.out.println("Trying to reset");
                         this.reset();
                     }
                     break;
@@ -279,7 +300,6 @@ public class FieldPanel extends Pane {
                 validInputEnteredThisFrame = true;
             } else {
                 validInputEnteredThisFrame = false;
-                System.out.println("Setting back to false 2");
             }
         }
     }

@@ -3,7 +3,9 @@ package sample.GameObject;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeType;
 
+import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,8 @@ public class Snake {
         double centerXY = CELL_SIZE * (double) BOARD_LENGTH / 2;
         Rectangle head = new Rectangle(CELL_SIZE, CELL_SIZE);
         head.setLayoutY(centerXY);
+        head.setStrokeType(StrokeType.INSIDE);
+        head.setStroke(Color.BLACK);
         head.setLayoutX(centerXY);
         head.setFill(SNAKE_HEAD_COLOR);
         wholeBody.add(new BodyPart(head, Direction.NONE));
@@ -57,6 +61,8 @@ public class Snake {
     private void addToBody(double layoutX, double layoutY, Direction direction) {
         Rectangle partRect = new Rectangle(CELL_SIZE, CELL_SIZE);
         partRect.setFill(SNAKE_BODY_COLOR);
+        partRect.setStrokeType(StrokeType.INSIDE);
+        partRect.setStroke(Color.BLACK);
         partRect.setLayoutX(layoutX);
         partRect.setLayoutY(layoutY);
         BodyPart part = new BodyPart(partRect, direction);
