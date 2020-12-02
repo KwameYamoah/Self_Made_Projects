@@ -12,9 +12,9 @@ import sample.UI.MainMenu;
 import static sample.Constant.*;
 
 public class Game extends Application {
-    public static FieldPanel fieldPanel;
     public static AnimationTimer gameTimer;
     public static Stage primaryStage;
+    public static Scene scene;
     public static void main(String[] args) {
         launch(args);
     }
@@ -31,15 +31,13 @@ public class Game extends Application {
     }
 
     private BorderPane createGameWindow() {
-        fieldPanel = new FieldPanel(true);
         BorderPane root = new BorderPane();
         root.setCenter(new MainMenu());
         return root;
     }
 
     private Scene createScene(BorderPane gamePane) {
-        Scene scene = new Scene(gamePane);
-        scene.setOnKeyPressed(event -> fieldPanel.handleInput(event));
+        scene = new Scene(gamePane);
         return scene;
     }
 
@@ -54,17 +52,19 @@ public class Game extends Application {
             long currentTime = 0;
             @Override
             public void handle(long now) {
-                if(FieldPanel.isSnakeDead()){
-                    System.out.println("Game Over");
-                    stop();
-                }
                 if (Math.abs(currentTime - now) > FPS) {
                     FieldPanel.nextLoop();
-                    FieldPanel.validInputEnteredThisFrame = false;
                     currentTime = now;
+                    if(FieldPanel.isSnakeDead()){
+                        System.out.println("Setting back to false 3");
+                        FieldPanel.validInputEnteredThisFrame = false;
+                        stop();
+                    }
                 }
+
+
+
             }
         };
-        gameTimer.start();
     }
 }

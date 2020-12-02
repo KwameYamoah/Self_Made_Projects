@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
 public class FieldPanel extends Pane {
-    public static boolean validInputEnteredThisFrame = false;
+    public static boolean  validInputEnteredThisFrame;
     private static KeyCode previousKey = null;
-    private Rectangle[][] gameBoard;
+    private  Rectangle[][] gameBoard;
     public static boolean isWrapAround;
     private static Snake snake;
     private static boolean snakeDead = false;
@@ -32,9 +32,9 @@ public class FieldPanel extends Pane {
     private static final int POINTS_PER_FOOD = 100;
 
     public FieldPanel(boolean isWrapAround) {
-        this.isWrapAround = isWrapAround;
-        createBoard();
-        createSnake();
+        FieldPanel.isWrapAround = isWrapAround;
+        Game.scene.setOnKeyPressed(this::handleInput);
+        reset();
     }
 
     public void reset(){
@@ -64,14 +64,12 @@ public class FieldPanel extends Pane {
         getChildren().add(score);
 
         label = new Label("GameOver, Your score was " + scorePoints + "\nPress R to retry");
-
         label.layoutXProperty().bind(widthProperty().subtract(label.widthProperty()).divide(2));
         label.layoutYProperty().bind(heightProperty().subtract(label.heightProperty()).divide(2));
         label.setFont(new Font("Arial", 30));
         label.setTextFill(Color.PURPLE);
         getChildren().add(label);
         label.setVisible(false);
-
     }
 
     private void addCells(boolean showDarkOutlines) {
@@ -107,7 +105,6 @@ public class FieldPanel extends Pane {
         snake = new Snake(this, foodPane);
         snakeDead = false;
         addSnakeToPane();
-        System.out.println("----");
     }
 
     private void addSnakeToPane() {
@@ -116,10 +113,11 @@ public class FieldPanel extends Pane {
         }
     }
 
-
     public static void nextLoop() {
         moveSnake();
         createFood();
+        System.out.println("Setting back to false 1");
+        validInputEnteredThisFrame = false;
     }
 
     private static void moveSnake() {
@@ -192,7 +190,6 @@ public class FieldPanel extends Pane {
             collider.setLayoutX(food.getLayoutX() - (double)CELL_SIZE/2);
             collider.setLayoutY(food.getLayoutY()  - (double)CELL_SIZE/2);
             if (isColliding(headCollider, collider)) {
-                System.out.println(headCollider.getLayoutX());
                 foodFound = true;
                 foodToRemove = food;
                 snake.eat(food);
@@ -221,6 +218,7 @@ public class FieldPanel extends Pane {
     private static void gameOver() {
         label.setText("GameOver, Your score was " + scorePoints + "\nPress R to retry");
         label.setVisible(true);
+        label.toFront();
         snakeDead = true;
     }
 
@@ -228,32 +226,33 @@ public class FieldPanel extends Pane {
         return headCollider.getLayoutX() == otherCollider.getLayoutX() && headCollider.getLayoutY() == otherCollider.getLayoutY();
     }
 
+    public synchronized void handleInput(KeyEvent event) {
+        if (checkIFKeyIsTheSame(event)) return;
 
-
-    public synchronized  void handleInput(KeyEvent event) {
-        if(event.getCode()!=KeyCode.R && event.getCode()!=KeyCode.SPACE){
-            if (previousKey != null && previousKey == event.getCode()) {
-                return;
-            }
-        }
-        previousKey = event.getCode();
+        if(validInputEnteredThisFrame) System.out.println("Key pressed when valid input entered");
 
         if (!validInputEnteredThisFrame) {
             switch (event.getCode()) {
                 case UP:
-                   changeHeadDirection(UP);
+                    System.out.println("UP pressed");
+                    changeHeadDirection(UP);
                     break;
                 case RIGHT:
+                    System.out.println("RIGHT pressed");
                     changeHeadDirection(RIGHT);
                     break;
                 case DOWN:
+                    System.out.println("DOWN pressed");
                     changeHeadDirection(DOWN);
                     break;
                 case LEFT:
+                    System.out.println("LEFT pressed");
                     changeHeadDirection(LEFT);
                     break;
                 case R:
-                    if(snakeDead){
+                    System.out.println("R pressed");
+                    if(snakeDead) {
+                        System.out.println("Trying to reset");
                         this.reset();
                     }
                     break;
@@ -262,16 +261,27 @@ public class FieldPanel extends Pane {
         }
     }
 
-    public void changeHeadDirection(Direction direction){
-        Snake.BodyPart snakeHead = snake.getHead();
-        if(!Direction.isOpposite(snakeHead.getDirection(), direction)){
-            snakeHead.setDirection(direction);
-            validInputEnteredThisFrame = true;
+    private boolean checkIFKeyIsTheSame(KeyEvent event) {
+        if(event.getCode()!= KeyCode.R && event.getCode()!=KeyCode.SPACE){
+            if (previousKey != null && previousKey == event.getCode()) {
+                return true;
+            }
         }
-        else{
-            validInputEnteredThisFrame = false;
-        }
+        previousKey = event.getCode();
+        return false;
+    }
 
+    public void changeHeadDirection(Direction direction){
+        if(!snakeDead) {
+            Snake.BodyPart snakeHead = snake.getHead();
+            if (!Direction.isOpposite(snakeHead.getDirection(), direction) || (snakeHead.getDirection() == direction)) {
+                snakeHead.setDirection(direction);
+                validInputEnteredThisFrame = true;
+            } else {
+                validInputEnteredThisFrame = false;
+                System.out.println("Setting back to false 2");
+            }
+        }
     }
 
     public static void createFood(){

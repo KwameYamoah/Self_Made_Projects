@@ -14,6 +14,7 @@ public class Snake {
     private ArrayList<BodyPart> wholeBody;
     private Pane gameField;
     private Pane foodPane;
+
     public Snake(Pane gameField, Pane foodPane) {
         this.gameField = gameField;
         this.foodPane = foodPane;
@@ -62,6 +63,7 @@ public class Snake {
         wholeBody.add(part);
         gameField.getChildren().add(partRect);
     }
+
     public void moveBody() {
         BodyPart previous = getHead();
         if (getBody() != null) {
@@ -75,7 +77,7 @@ public class Snake {
         Rectangle head = getHead().getRectangle();
         if (isVertical) {
             double newYLocation = head.getLayoutY() + force;
-            if(isWrapAround) {
+            if (isWrapAround) {
                 newYLocation = getWrappedPosition(newYLocation);
             }
             head.setLayoutY(newYLocation);
@@ -88,17 +90,15 @@ public class Snake {
         } else {
 
             double newXLocation = head.getLayoutX() + force;
-            System.out.println("Before - " + newXLocation);
-            if(isWrapAround) {
+
+            if (isWrapAround) {
                 newXLocation = getWrappedPosition(newXLocation);
             }
-            System.out.println("After - " + newXLocation);
-            System.out.println();
+
             head.setLayoutX(newXLocation);
             if ((force > 0)) {
                 getHead().setDirection(RIGHT);
-            }
-            else {
+            } else {
                 getHead().setDirection(LEFT);
             }
         }
