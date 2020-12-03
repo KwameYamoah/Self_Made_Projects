@@ -1,6 +1,7 @@
 package sample.UI;
 
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -57,8 +58,6 @@ public class FieldPanel extends Pane {
         playBackgroundMusic();
 
     }
-
-
 
     private void clear() {
         getChildren().clear();
@@ -306,6 +305,7 @@ public class FieldPanel extends Pane {
 
     public static void createFood(){
         if(snakeFood.isEmpty()){
+
             boolean spotIsEmpty =  false;
             double x = 0;
             double y = 0;
@@ -321,9 +321,40 @@ public class FieldPanel extends Pane {
             }
 
             if(spotIsEmpty){
-                createSnakeFoodAt(x, y);
+                    createTimedFood(x,y);
             }
+
+
         }
+    }
+
+    public static void createTimedFood(double x, double y){
+        Thread thread = new Thread(()->{
+            Circle circle = new Circle();
+            circle.setLayoutX(x + (double)CELL_SIZE/2);
+            circle.setLayoutY(y + (double)CELL_SIZE/2);
+            circle.setRadius((double)CELL_SIZE/2);
+            circle.setFill(Color.VIOLET);
+            Platform.runLater(()->{
+                foodPane.getChildren().add(circle);
+                snakeFood.add(circle);
+            });
+
+            try {
+                Thread.sleep(2500);
+                Platform.runLater(()->{
+                    foodPane.getChildren().remove(circle);
+                    snakeFood.remove(circle);
+                });
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        });
+        thread.setDaemon(true);
+        thread.start();
+
     }
 
     public static boolean checkIfSpotIsEmpty(double x, double y){

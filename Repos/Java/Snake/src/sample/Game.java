@@ -27,7 +27,6 @@ public class Game extends Application {
         primaryStage.sizeToScene();
         loadScene(primaryStage, scene);
         createGameLoop();
-
     }
 
     private BorderPane createGameWindow() {
@@ -55,14 +54,11 @@ public class Game extends Application {
                 if (Math.abs(currentTime - now) > FPS) {
                     FieldPanel.nextLoop();
                     currentTime = now;
-                    if(FieldPanel.isSnakeDead()){
+                    if (FieldPanel.isSnakeDead()) {
                         FieldPanel.validInputEnteredThisFrame = false;
                         stop();
                     }
                 }
-
-
-
             }
         };
     }
