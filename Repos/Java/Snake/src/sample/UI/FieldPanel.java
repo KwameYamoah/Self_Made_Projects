@@ -367,31 +367,32 @@ public class FieldPanel extends Pane {
         spot.setLayoutX(x);
         spot.setLayoutY(y);
 
+        if (ifSpotHasBodyPart(spot)) return false;
+        else if (ifSpotHasFood(spot, snakeFood)) return false;
+        else if (ifSpotHasFood(spot, timedSnakeFood)) return false;
+        else return false;
+    }
+
+    private static boolean ifSpotHasBodyPart(Rectangle spot) {
         for (Snake.BodyPart bodyPart : snake.getWholeBody()) {
             Rectangle collider = bodyPart.getRectangle();
             if (isColliding(spot, collider)) {
-                return false;
+                return true;
             }
         }
+        return false;
+    }
 
+    private static boolean ifSpotHasFood(Rectangle spot, ArrayList<Circle> snakeFood) {
         for (Circle food : snakeFood) {
             Rectangle collider = new Rectangle();
             collider.setLayoutX(food.getLayoutX());
             collider.setLayoutY(food.getLayoutY());
             if (isColliding(spot, collider)) {
-                return false;
+                return true;
             }
         }
-
-        for (Circle food : timedSnakeFood) {
-            Rectangle collider = new Rectangle();
-            collider.setLayoutX(food.getLayoutX());
-            collider.setLayoutY(food.getLayoutY());
-            if (isColliding(spot, collider)) {
-                return false;
-            }
-        }
-        return true;
+        return false;
     }
 
     private static void createSnakeFoodAt(double x, double y) {
