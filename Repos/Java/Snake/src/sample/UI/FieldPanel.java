@@ -64,6 +64,7 @@ public class FieldPanel extends Pane {
 
     }
 
+
     private void clear() {
         getChildren().clear();
     }
@@ -86,6 +87,23 @@ public class FieldPanel extends Pane {
                 new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\deathEffect.wav").toURI().toString());
         deathSound = new MediaPlayer(media);
         deathSound.setVolume(0.2);
+    }
+
+
+    private static void playPickUpSound() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\pickUp.wav").toURI().toString());
+        MediaPlayer pickupSound2 = new MediaPlayer(media);
+        pickupSound2.setVolume(0.2);
+        pickupSound2.play();
+    }
+
+    private static void playPickUpSound2() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\pickUp2.wav").toURI().toString());
+        MediaPlayer pickupSound = new MediaPlayer(media);
+        pickupSound.setVolume(0.2);
+        pickupSound.play();
     }
 
     private void playBackgroundMusic() {
@@ -196,12 +214,12 @@ public class FieldPanel extends Pane {
 
     private static boolean checkIfSnakeWillCollide(int force, boolean isVertical) {
         snake.moveHead(force, isVertical, isWrapAround);
-        boolean ifWillCollide = checkIfSnakeIsCurrentlyColliding();
+        boolean ifWillCollide = handleSnakeCollisions();
         snake.moveHead(-force, isVertical, isWrapAround);
         return ifWillCollide;
     }
 
-    private static boolean checkIfSnakeIsCurrentlyColliding() {
+    private static boolean handleSnakeCollisions() {
         Rectangle headCollider = snake.getHead().getRectangle();
         if (outOfField(headCollider)) return true;
         if (snake.getBody() != null && headCollidedWithBody(headCollider)) {
@@ -210,24 +228,23 @@ public class FieldPanel extends Pane {
         }
 
         if (ifHeadCollidesWithFood(headCollider)) {
-            addPoints(POINTS_PER_FOOD);
+            addPoints(POINTS_PER_FOOD * 5);
             snake.addBodyPart();
+            playPickUpSound();
         }
 
         if (ifHeadCollidesWithTimedFood(headCollider)) {
 
-            if(snake.decreaseBodyPart()){
-                addPoints(POINTS_PER_FOOD*2);
+            if (snake.getWholeBody().size() == 1) {
+                scorePoints = 0;
+                score.setText("Score : " + scorePoints);
+                gameOver();
             }
-            else{
-                addPoints(-(POINTS_PER_FOOD*2));
-                if(scorePoints < 0){
-                    scorePoints = 0;
-                    score.setText("Score : " + scorePoints);
-                    gameOver();
-                }
-            }
+            snake.decreaseBodyPart();
+            addPoints(POINTS_PER_FOOD * 2);
+            playPickUpSound2();
         }
+
         return false;
     }
 
@@ -365,6 +382,15 @@ public class FieldPanel extends Pane {
                 return false;
             }
         }
+
+        for (Circle food : timedSnakeFood) {
+            Rectangle collider = new Rectangle();
+            collider.setLayoutX(food.getLayoutX());
+            collider.setLayoutY(food.getLayoutY());
+            if (isColliding(spot, collider)) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -384,7 +410,7 @@ public class FieldPanel extends Pane {
             circle.setLayoutX(x + (double) CELL_SIZE / 2);
             circle.setLayoutY(y + (double) CELL_SIZE / 2);
             circle.setRadius((double) CELL_SIZE / 2);
-            circle.setFill(Color.VIOLET);
+            circle.setFill(Color.PINK);
             Platform.runLater(() -> {
                 foodPane.getChildren().add(circle);
                 timedSnakeFood.add(circle);

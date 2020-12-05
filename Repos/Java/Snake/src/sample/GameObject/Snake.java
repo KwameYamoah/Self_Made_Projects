@@ -74,16 +74,14 @@ public class Snake {
         fieldPanel.getChildren().add(partRect);
     }
 
-    public boolean decreaseBodyPart() {
+    public void decreaseBodyPart() {
         BodyPart tail = getTail();
-
         if(tail != null){
             Rectangle tailRect = tail.getRectangle();
             wholeBody.remove(tail);
             fieldPanel.getChildren().remove(tailRect);
-            return true;
+
         }
-        return false;
     }
 
     private Rectangle createBodyRectangle(double layoutX, double layoutY) {
