@@ -5,8 +5,6 @@ public enum Direction {
 
     public static boolean isOpposite(Direction d1, Direction d2) {
         switch (d1){
-            case NONE:
-                return false;
             case LEFT:
                 return d2 == RIGHT;
             case RIGHT:
@@ -15,7 +13,8 @@ public enum Direction {
                 return d2 == DOWN;
             case DOWN:
                 return d2 == UP;
+            default:
+                return false;
         }
-        return false;
     }
 }

@@ -16,25 +16,36 @@ import sample.GameObject.Direction;
 import sample.GameObject.Snake;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+
 import java.io.File;
 import java.util.ArrayList;
+
 import static sample.Constant.*;
 import static sample.GameObject.Direction.*;
+
 public class FieldPanel extends Pane {
-    public static boolean  validInputEnteredThisFrame;
+    //state variables
+    public static boolean validInputEnteredThisFrame;
     private static KeyCode previousKey = null;
-    private  Rectangle[][] gameBoard;
     public static boolean isWrapAround;
+    private Rectangle[][] gameBoard;
+
+    //snake
     private static Snake snake;
     private static boolean snakeDead = false;
     private static ArrayList<Circle> snakeFood;
+    private static ArrayList<Circle> timedSnakeFood;
     private static Pane foodPane;
+
+    //labels and data
     private static Label score;
     private static int scorePoints;
-    private static Label label;
     private static final int POINTS_PER_FOOD = 100;
-    private static MediaPlayer mediaPlayer;
-    private static MediaPlayer mediaPlayer2;
+    private static Label label;
+
+    //music player
+    private static MediaPlayer bgSound;
+    private static MediaPlayer deathSound;
 
     public FieldPanel(boolean isWrapAround) {
         FieldPanel.isWrapAround = isWrapAround;
@@ -42,20 +53,14 @@ public class FieldPanel extends Pane {
         reset();
     }
 
-    private void setSnakeDeathPlayer() {
-        Media media = new Media(
-                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\deathEffect.wav").toURI().toString());
-        mediaPlayer2 = new MediaPlayer(media);
-        mediaPlayer2.setVolume(0.2);
-    }
 
-    public void reset(){
+    public void reset() {
         clear();
         createBoard();
         createSnake();
         setSnakeDeathPlayer();
-        Game.gameTimer.start();
         playBackgroundMusic();
+        Game.gameTimer.start();
 
     }
 
@@ -70,14 +75,44 @@ public class FieldPanel extends Pane {
         addLevelDetails();
     }
 
+    public void createSnake() {
+        snake = new Snake(this, foodPane);
+        snakeDead = false;
+        addSnakeToPane();
+    }
+
+    private void setSnakeDeathPlayer() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\deathEffect.wav").toURI().toString());
+        deathSound = new MediaPlayer(media);
+        deathSound.setVolume(0.2);
+    }
+
+    private void playBackgroundMusic() {
+        Media media = new Media(
+                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\actionRetroMusic.mp3").toURI().toString());
+        bgSound = new MediaPlayer(media);
+        bgSound.setCycleCount(MediaPlayer.INDEFINITE);
+        bgSound.setAutoPlay(true);
+        bgSound.setVolume(0.2);
+
+    }
+
     private void addLevelDetails() {
+        addScore();
+        addGameOverLabel();
+    }
+
+    private void addScore() {
         scorePoints = 0;
         score = new Label("Score : " + scorePoints);
-        score.setLayoutX(CELL_SIZE*BOARD_LENGTH - (CELL_SIZE * 2));
+        score.setLayoutX(CELL_SIZE * BOARD_LENGTH - (CELL_SIZE * 2));
         score.setLayoutY(CELL_SIZE);
         score.setFont(new Font("Arial", 15));
         getChildren().add(score);
+    }
 
+    private void addGameOverLabel() {
         label = new Label("GameOver, Your score was " + scorePoints + "\nPress R to retry");
         label.layoutXProperty().bind(widthProperty().subtract(label.widthProperty()).divide(2));
         label.layoutYProperty().bind(heightProperty().subtract(label.heightProperty()).divide(2));
@@ -91,35 +126,33 @@ public class FieldPanel extends Pane {
         gameBoard = new Rectangle[BOARD_LENGTH][BOARD_LENGTH];
         for (int y = 0; y < BOARD_LENGTH; y++) {
             for (int x = 0; x < BOARD_LENGTH; x++) {
-                Rectangle rectangle = new Rectangle(CELL_SIZE, CELL_SIZE);
-                rectangle.setLayoutX(x * CELL_SIZE);
-                rectangle.setLayoutY(y * CELL_SIZE);
-                rectangle.setFill(Color.WHITE);
-                if(showDarkOutlines) {
-                    rectangle.setStroke(Color.BLACK);
-                }
-                else{
-                    rectangle.setStroke(Color.valueOf("rgb(208, 214, 209)"));
-                }
-                rectangle.setStrokeType(StrokeType.INSIDE);
-
+                Rectangle rectangle = createBoardCell(showDarkOutlines, y, x);
                 gameBoard[y][x] = rectangle;
                 getChildren().add(rectangle);
             }
         }
+    }
 
+    private Rectangle createBoardCell(boolean showDarkOutlines, int y, int x) {
+        Rectangle rectangle = new Rectangle(CELL_SIZE, CELL_SIZE);
+        rectangle.setLayoutX(x * CELL_SIZE);
+        rectangle.setLayoutY(y * CELL_SIZE);
+        rectangle.setFill(Color.WHITE);
+        if (showDarkOutlines) {
+            rectangle.setStroke(Color.BLACK);
+        } else {
+            rectangle.setStroke(Color.valueOf("rgb(208, 214, 209)"));
+        }
+        rectangle.setStrokeType(StrokeType.INSIDE);
+        return rectangle;
     }
 
     private void createPaneAndListToHoldFood() {
+        snakeFood = new ArrayList<>();
+        timedSnakeFood = new ArrayList<>();
         foodPane = new Pane();
         getChildren().add(foodPane);
-        snakeFood = new ArrayList<>();
-    }
 
-    public void createSnake() {
-        snake = new Snake(this, foodPane);
-        snakeDead = false;
-        addSnakeToPane();
     }
 
     private void addSnakeToPane() {
@@ -128,15 +161,6 @@ public class FieldPanel extends Pane {
         }
     }
 
-    private void playBackgroundMusic() {
-        Media media = new Media(
-                new File("C:\\Users\\Default\\Desktop\\Education\\GitHub\\Self_Made_Projects\\Repos\\Java\\Snake\\src\\sample\\Sounds\\actionRetroMusic.mp3").toURI().toString());
-        mediaPlayer = new MediaPlayer(media);
-        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-        mediaPlayer.setAutoPlay(true);
-        mediaPlayer.setVolume(0.2);
-
-    }
 
     public static void nextLoop() {
         moveSnake();
@@ -185,51 +209,27 @@ public class FieldPanel extends Pane {
             return true;
         }
 
-        if(ifHeadCollidesWithFood(headCollider)){
+        if (ifHeadCollidesWithFood(headCollider)) {
             addPoints(POINTS_PER_FOOD);
             snake.addBodyPart();
-
         }
-        return false;
-    }
 
+        if (ifHeadCollidesWithTimedFood(headCollider)) {
 
-
-    private static boolean headCollidedWithBody(Rectangle headCollider) {
-        for (Snake.BodyPart bodyPart : snake.getBody()) {
-            Rectangle collider = bodyPart.getRectangle();
-            if (isColliding(headCollider, collider)) {
-
-                return true;
+            if(snake.decreaseBodyPart()){
+                addPoints(POINTS_PER_FOOD*2);
+            }
+            else{
+                addPoints(-(POINTS_PER_FOOD*2));
+                if(scorePoints < 0){
+                    scorePoints = 0;
+                    score.setText("Score : " + scorePoints);
+                    gameOver();
+                }
             }
         }
         return false;
     }
-
-
-    private static boolean ifHeadCollidesWithFood(Rectangle headCollider) {
-        boolean foodFound = false;
-        Circle foodToRemove = null;
-        for (Circle food : snakeFood) {
-            Rectangle collider = new Rectangle();
-            collider.setLayoutX(food.getLayoutX() - (double)CELL_SIZE/2);
-            collider.setLayoutY(food.getLayoutY()  - (double)CELL_SIZE/2);
-            if (isColliding(headCollider, collider)) {
-                foodFound = true;
-                foodToRemove = food;
-                snake.eat(food);
-            }
-        }
-
-        //Method could be simplified? removed returns a boolean
-        if(foodFound) snakeFood.remove(foodToRemove);
-        return foodFound;
-    }
-    private static void addPoints(int points) {
-        scorePoints += points;
-        score.setText("Score : " + scorePoints);
-    }
-
 
     private static boolean outOfField(Rectangle headCollider) {
         if (headCollider.getLayoutX() < 0 || headCollider.getLayoutX() >= GAME_WINDOW_LENGTH ||
@@ -244,120 +244,108 @@ public class FieldPanel extends Pane {
         label.setText("GameOver, Your score was " + scorePoints + "\nPress R to retry");
         label.setVisible(true);
         label.toFront();
-        mediaPlayer.stop();
-        mediaPlayer2.play();
+        bgSound.stop();
+        deathSound.play();
         snakeDead = true;
     }
+
+    private static boolean headCollidedWithBody(Rectangle headCollider) {
+        for (Snake.BodyPart bodyPart : snake.getBody()) {
+            Rectangle collider = bodyPart.getRectangle();
+            if (isColliding(headCollider, collider)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private static boolean ifHeadCollidesWithFood(Rectangle headCollider) {
+        Circle foodToRemove = ifFoodFound(headCollider, snakeFood);
+
+        if (foodToRemove != null) {
+            snakeFood.remove(foodToRemove);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean ifHeadCollidesWithTimedFood(Rectangle headCollider) {
+        Circle foodToRemove = ifFoodFound(headCollider, timedSnakeFood);
+        if (foodToRemove != null) {
+            timedSnakeFood.remove(foodToRemove);
+            return true;
+        }
+        return false;
+    }
+
+    private static Circle ifFoodFound(Rectangle headCollider, ArrayList<Circle> foodList) {
+        Circle foodToRemove = null;
+        for (Circle food : foodList) {
+            Rectangle collider = new Rectangle();
+            collider.setLayoutX(food.getLayoutX() - (double) CELL_SIZE / 2);
+            collider.setLayoutY(food.getLayoutY() - (double) CELL_SIZE / 2);
+            if (isColliding(headCollider, collider)) {
+                foodToRemove = food;
+                snake.eat(food);
+            }
+        }
+        return foodToRemove;
+    }
+
 
     private static boolean isColliding(Rectangle headCollider, Rectangle otherCollider) {
         return headCollider.getLayoutX() == otherCollider.getLayoutX() && headCollider.getLayoutY() == otherCollider.getLayoutY();
     }
 
-    public synchronized void handleInput(KeyEvent event) {
-        if (checkIFKeyIsTheSame(event)) return;
-
-
-        if (!validInputEnteredThisFrame) {
-            switch (event.getCode()) {
-                case UP:
-                    changeHeadDirection(UP);
-                    break;
-                case RIGHT:
-                    changeHeadDirection(RIGHT);
-                    break;
-                case DOWN:
-                    changeHeadDirection(DOWN);
-                    break;
-                case LEFT:
-                    changeHeadDirection(LEFT);
-                    break;
-                case R:
-                    if(snakeDead) {
-                        this.reset();
-                    }
-                    break;
-            }
-
-        }
+    private static void addPoints(int points) {
+        scorePoints += points;
+        score.setText("Score : " + scorePoints);
     }
 
-    private boolean checkIFKeyIsTheSame(KeyEvent event) {
-        if(event.getCode()!= KeyCode.R && event.getCode()!=KeyCode.SPACE){
-            if (previousKey != null && previousKey == event.getCode()) {
-                return true;
-            }
-        }
-        previousKey = event.getCode();
-        return false;
-    }
-
-    public void changeHeadDirection(Direction direction){
-        if(!snakeDead) {
-            Snake.BodyPart snakeHead = snake.getHead();
-            if (!Direction.isOpposite(snakeHead.getDirection(), direction) || (snakeHead.getDirection() == direction)) {
-                snakeHead.setDirection(direction);
-                validInputEnteredThisFrame = true;
-            } else {
-                validInputEnteredThisFrame = false;
-            }
-        }
-    }
-
-    public static void createFood(){
-        if(snakeFood.isEmpty()){
-
-            boolean spotIsEmpty =  false;
+    public static void createFood() {
+        if (snakeFood.isEmpty()) {
+            boolean spotIsEmpty = false;
             double x = 0;
             double y = 0;
             int tries = 0;
-            while(!spotIsEmpty){
-                 x = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                 y = (int)(Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                 spotIsEmpty = checkIfSpotIsEmpty(x,y);
-                 tries++;
-                if(tries > 1000){
+            while (!spotIsEmpty) {
+                x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                spotIsEmpty = checkIfSpotIsEmpty(x, y);
+                tries++;
+                if (tries > 100) {
                     break;
                 }
             }
 
-            if(spotIsEmpty){
-                    createTimedFood(x,y);
+            if (spotIsEmpty) {
+                createSnakeFoodAt(x, y);
+            }
+        }
+        if (timedSnakeFood.isEmpty()) {
+            boolean spotIsEmpty = false;
+            double x = 0;
+            double y = 0;
+            int tries = 0;
+            while (!spotIsEmpty) {
+                x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+                spotIsEmpty = checkIfSpotIsEmpty(x, y);
+                tries++;
+
+                if (tries > 100) {
+                    break;
+                }
             }
 
-
+            if (spotIsEmpty) {
+                createTimedFood(x, y);
+            }
         }
     }
 
-    public static void createTimedFood(double x, double y){
-        Thread thread = new Thread(()->{
-            Circle circle = new Circle();
-            circle.setLayoutX(x + (double)CELL_SIZE/2);
-            circle.setLayoutY(y + (double)CELL_SIZE/2);
-            circle.setRadius((double)CELL_SIZE/2);
-            circle.setFill(Color.VIOLET);
-            Platform.runLater(()->{
-                foodPane.getChildren().add(circle);
-                snakeFood.add(circle);
-            });
-
-            try {
-                Thread.sleep(2500);
-                Platform.runLater(()->{
-                    foodPane.getChildren().remove(circle);
-                    snakeFood.remove(circle);
-                });
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-        });
-        thread.setDaemon(true);
-        thread.start();
-
-    }
-
-    public static boolean checkIfSpotIsEmpty(double x, double y){
+    public static boolean checkIfSpotIsEmpty(double x, double y) {
         Rectangle spot = new Rectangle();
         spot.setLayoutX(x);
         spot.setLayoutY(y);
@@ -382,12 +370,91 @@ public class FieldPanel extends Pane {
 
     private static void createSnakeFoodAt(double x, double y) {
         Circle circle = new Circle();
-        circle.setLayoutX(x + (double)CELL_SIZE/2);
-        circle.setLayoutY(y + (double)CELL_SIZE/2);
-        circle.setRadius((double)CELL_SIZE/2);
+        circle.setLayoutX(x + (double) CELL_SIZE / 2);
+        circle.setLayoutY(y + (double) CELL_SIZE / 2);
+        circle.setRadius((double) CELL_SIZE / 2);
         circle.setFill(Color.YELLOW);
         foodPane.getChildren().add(circle);
         snakeFood.add(circle);
+    }
+
+    public static void createTimedFood(double x, double y) {
+        Thread thread = new Thread(() -> {
+            Circle circle = new Circle();
+            circle.setLayoutX(x + (double) CELL_SIZE / 2);
+            circle.setLayoutY(y + (double) CELL_SIZE / 2);
+            circle.setRadius((double) CELL_SIZE / 2);
+            circle.setFill(Color.VIOLET);
+            Platform.runLater(() -> {
+                foodPane.getChildren().add(circle);
+                timedSnakeFood.add(circle);
+            });
+
+            try {
+                Thread.sleep(2500);
+                Platform.runLater(() -> {
+                    foodPane.getChildren().remove(circle);
+                    timedSnakeFood.remove(circle);
+                });
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        });
+        thread.setDaemon(true);
+        thread.start();
+
+    }
+
+
+    public synchronized void handleInput(KeyEvent event) {
+        if (checkIFKeyIsTheSame(event)) return;
+
+        if (!validInputEnteredThisFrame) {
+            switch (event.getCode()) {
+                case UP:
+                    changeHeadDirection(UP);
+                    break;
+                case RIGHT:
+                    changeHeadDirection(RIGHT);
+                    break;
+                case DOWN:
+                    changeHeadDirection(DOWN);
+                    break;
+                case LEFT:
+                    changeHeadDirection(LEFT);
+                    break;
+                case R:
+                    if (snakeDead) {
+                        this.reset();
+                    }
+                    break;
+            }
+
+        }
+    }
+
+    private boolean checkIFKeyIsTheSame(KeyEvent event) {
+        if (event.getCode() != KeyCode.R && event.getCode() != KeyCode.SPACE) {
+            if (previousKey != null && previousKey == event.getCode()) {
+                return true;
+            }
+        }
+        previousKey = event.getCode();
+        return false;
+    }
+
+    public void changeHeadDirection(Direction direction) {
+        if (!snakeDead) {
+            Snake.BodyPart snakeHead = snake.getHead();
+            if (!Direction.isOpposite(snakeHead.getDirection(), direction) || (snakeHead.getDirection() == direction)) {
+                snakeHead.setDirection(direction);
+                validInputEnteredThisFrame = true;
+            } else {
+                validInputEnteredThisFrame = false;
+            }
+        }
     }
 
     public static boolean isSnakeDead() {

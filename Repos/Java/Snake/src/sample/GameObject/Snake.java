@@ -4,8 +4,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
-
 import javafx.scene.paint.Color;
+import sample.UI.FieldPanel;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,11 +15,11 @@ import static sample.GameObject.Direction.*;
 
 public class Snake {
     private ArrayList<BodyPart> wholeBody;
-    private Pane gameField;
+    private Pane fieldPanel;
     private Pane foodPane;
 
-    public Snake(Pane gameField, Pane foodPane) {
-        this.gameField = gameField;
+    public Snake(FieldPanel fieldPanel, Pane foodPane) {
+        this.fieldPanel = fieldPanel;
         this.foodPane = foodPane;
         wholeBody = new ArrayList<>();
         createSnakeHead();
@@ -36,10 +37,18 @@ public class Snake {
     }
 
     public void addBodyPart() {
-        BodyPart tail = getTail();
-        Rectangle tailRect = tail.getRectangle();
-        increaseBody(tail, tailRect);
+
+        BodyPart endPart;
+        if(wholeBody.size() == 1){
+            endPart = getHead();
+        }
+        else{
+            endPart = getTail();
+        }
+        Rectangle tailRect = endPart.getRectangle();
+        increaseBody(endPart, tailRect);
     }
+
 
     private void increaseBody(BodyPart tail, Rectangle tailRect) {
         switch (tail.getDirection()) {
@@ -59,15 +68,32 @@ public class Snake {
     }
 
     private void addToBody(double layoutX, double layoutY, Direction direction) {
+        Rectangle partRect = createBodyRectangle(layoutX, layoutY);
+        BodyPart part = new BodyPart(partRect, direction);
+        wholeBody.add(part);
+        fieldPanel.getChildren().add(partRect);
+    }
+
+    public boolean decreaseBodyPart() {
+        BodyPart tail = getTail();
+
+        if(tail != null){
+            Rectangle tailRect = tail.getRectangle();
+            wholeBody.remove(tail);
+            fieldPanel.getChildren().remove(tailRect);
+            return true;
+        }
+        return false;
+    }
+
+    private Rectangle createBodyRectangle(double layoutX, double layoutY) {
         Rectangle partRect = new Rectangle(CELL_SIZE, CELL_SIZE);
         partRect.setFill(SNAKE_BODY_COLOR);
         partRect.setStrokeType(StrokeType.INSIDE);
         partRect.setStroke(Color.BLACK);
         partRect.setLayoutX(layoutX);
         partRect.setLayoutY(layoutY);
-        BodyPart part = new BodyPart(partRect, direction);
-        wholeBody.add(part);
-        gameField.getChildren().add(partRect);
+        return partRect;
     }
 
     public void moveBody() {
@@ -87,26 +113,16 @@ public class Snake {
                 newYLocation = getWrappedPosition(newYLocation);
             }
             head.setLayoutY(newYLocation);
-            if ((force > 0)) {
-                getHead().setDirection(DOWN);
-            } else {
-                getHead().setDirection(UP);
-            }
+            updateDirection(force, DOWN, UP);
 
-        } else {
-
+        }
+        else {
             double newXLocation = head.getLayoutX() + force;
-
             if (isWrapAround) {
                 newXLocation = getWrappedPosition(newXLocation);
             }
-
             head.setLayoutX(newXLocation);
-            if ((force > 0)) {
-                getHead().setDirection(RIGHT);
-            } else {
-                getHead().setDirection(LEFT);
-            }
+            updateDirection(force, RIGHT, LEFT);
         }
     }
 
@@ -117,6 +133,16 @@ public class Snake {
         newLocation = newLocation % GAME_WINDOW_LENGTH;
         return newLocation;
     }
+
+    private void updateDirection(int force, Direction firstDirect, Direction secondDirection) {
+        if ((force > 0)) {
+            getHead().setDirection(firstDirect);
+        } else {
+            getHead().setDirection(secondDirection);
+        }
+    }
+
+
 
     public List<BodyPart> getBody() {
         if (wholeBody.isEmpty()) {
@@ -137,12 +163,17 @@ public class Snake {
     }
 
     public BodyPart getTail() {
+        if (wholeBody.size() == 1) {
+            return null;
+        }
         return wholeBody.get(wholeBody.size() - 1);
     }
 
     public void eat(Circle food) {
         foodPane.getChildren().remove(food);
     }
+
+
 
 
     public static class BodyPart {
