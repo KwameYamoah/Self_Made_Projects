@@ -49,8 +49,12 @@ public class Game extends Application {
     public static void createGameLoop() {
         gameTimer = new AnimationTimer() {
             long currentTime = 0;
+            long foodTimer = 0;
             @Override
             public void handle(long now) {
+                if(foodTimer == 0){
+                    foodTimer = now;
+                }
                 if (Math.abs(currentTime - now) > FPS) {
                     FieldPanel.nextLoop();
                     currentTime = now;
@@ -59,6 +63,20 @@ public class Game extends Application {
                         stop();
                     }
                 }
+
+                System.out.println("-----------");
+                System.out.println(foodTimer);
+                System.out.println(now);
+                if (Math.abs(foodTimer - now) > FIVE_SECOND_IN_NANO) {
+                    if(FieldPanel.foodTimerDelay){
+                        foodTimer = now;
+                    }
+
+                    FieldPanel.foodTimerDelay = true;
+
+                }
+
+
             }
         };
     }

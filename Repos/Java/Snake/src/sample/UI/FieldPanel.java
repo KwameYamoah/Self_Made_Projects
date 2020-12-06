@@ -30,7 +30,8 @@ public class FieldPanel extends Pane {
     private static KeyCode previousKey = null;
     public static boolean isWrapAround;
     private Rectangle[][] gameBoard;
-
+    public static boolean foodTimerDelay = false;
+    public static boolean isNormalFoodTaken = false;
     //snake
     private static Snake snake;
     private static boolean snakeDead = false;
@@ -229,8 +230,9 @@ public class FieldPanel extends Pane {
         }
 
         if (ifHeadCollidesWithFood(headCollider)) {
-            addPoints(POINTS_PER_FOOD * 5);
+            addPoints(POINTS_PER_FOOD * 2);
             snake.addBodyPart();
+            isNormalFoodTaken = true;
             playPickUpSound();
         }
 
@@ -242,7 +244,7 @@ public class FieldPanel extends Pane {
                 gameOver();
             }
             snake.decreaseBodyPart();
-            addPoints(POINTS_PER_FOOD * 2);
+            addPoints(POINTS_PER_FOOD * 5);
             playPickUpSound2();
         }
 
@@ -280,8 +282,8 @@ public class FieldPanel extends Pane {
 
     private static boolean ifHeadCollidesWithFood(Rectangle headCollider) {
         Circle foodToRemove = ifFoodFound(headCollider, snakeFood);
-
         if (foodToRemove != null) {
+
             snakeFood.remove(foodToRemove);
             return true;
         }
@@ -331,15 +333,19 @@ public class FieldPanel extends Pane {
 
         if (timedSnakeFood.isEmpty()) {
             Point2D spot = getFreeSpot();
-            if (spot != null) {
-                createTimedFood(spot.getX(), spot.getY());
+            if (spot != null && foodTimerDelay ) {
+                if(isNormalFoodTaken) {
+                    createTimedFood(spot.getX(), spot.getY());
+                    isNormalFoodTaken = false;
+                }
+                foodTimerDelay = false;
+
             }
         }
     }
 
-    private static Point2D getFreeSpot(){
+    private static Point2D getFreeSpot() {
         int tries = 1;
-
         do {
             int x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
             int y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
@@ -353,7 +359,7 @@ public class FieldPanel extends Pane {
         return null;
     }
 
-    public static boolean checkIfSpotIsEmpty(double x, double y) {
+    private static boolean checkIfSpotIsEmpty(double x, double y) {
         Rectangle spot = new Rectangle();
         spot.setLayoutX(x);
         spot.setLayoutY(y);

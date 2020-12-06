@@ -12,4 +12,6 @@ public class Constant {
     public static final int FRAMES = 8;
     public static final int FPS = ONE_SECOND_IN_NANO/FRAMES;
     public static final int BORDER_THICKNESS = 5;
+
+    public static final long FIVE_SECOND_IN_NANO = 5000000000L;
 }
