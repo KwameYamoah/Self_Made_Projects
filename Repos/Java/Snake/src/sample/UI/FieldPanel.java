@@ -2,6 +2,7 @@ package sample.UI;
 
 
 import javafx.application.Platform;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -322,55 +323,43 @@ public class FieldPanel extends Pane {
 
     public static void createFood() {
         if (snakeFood.isEmpty()) {
-            boolean spotIsEmpty = false;
-            double x = 0;
-            double y = 0;
-            int tries = 0;
-            while (!spotIsEmpty) {
-                x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                spotIsEmpty = checkIfSpotIsEmpty(x, y);
-                tries++;
-                if (tries > 100) {
-                    break;
-                }
-            }
-
-            if (spotIsEmpty) {
-                createSnakeFoodAt(x, y);
+            Point2D spot = getFreeSpot();
+            if (spot != null) {
+                createSnakeFoodAt(spot.getX(), spot.getY());
             }
         }
+
         if (timedSnakeFood.isEmpty()) {
-            boolean spotIsEmpty = false;
-            double x = 0;
-            double y = 0;
-            int tries = 0;
-            while (!spotIsEmpty) {
-                x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
-                spotIsEmpty = checkIfSpotIsEmpty(x, y);
-                tries++;
-
-                if (tries > 100) {
-                    break;
-                }
-            }
-
-            if (spotIsEmpty) {
-                createTimedFood(x, y);
+            Point2D spot = getFreeSpot();
+            if (spot != null) {
+                createTimedFood(spot.getX(), spot.getY());
             }
         }
+    }
+
+    private static Point2D getFreeSpot(){
+        int tries = 1;
+
+        do {
+            int x = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+            int y = (int) (Math.random() * BOARD_LENGTH) * CELL_SIZE;
+
+            if (checkIfSpotIsEmpty(x, y)) {
+                return new Point2D(x, y);
+            }
+            tries++;
+        } while (tries <= 100);
+
+        return null;
     }
 
     public static boolean checkIfSpotIsEmpty(double x, double y) {
         Rectangle spot = new Rectangle();
         spot.setLayoutX(x);
         spot.setLayoutY(y);
-
         if (ifSpotHasBodyPart(spot)) return false;
         else if (ifSpotHasFood(spot, snakeFood)) return false;
-        else if (ifSpotHasFood(spot, timedSnakeFood)) return false;
-        else return false;
+        else return !ifSpotHasFood(spot, timedSnakeFood);
     }
 
     private static boolean ifSpotHasBodyPart(Rectangle spot) {
